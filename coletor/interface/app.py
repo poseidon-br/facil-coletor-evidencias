@@ -45,6 +45,9 @@ LINKS_AUTOR = {
     "linkedin": "https://www.linkedin.com/in/pcedenis",
 }
 PASTA_WEB = Path(__file__).parent / "web"
+ICONE = Path(__file__).resolve().parents[1] / "recursos" / "facil.ico"
+# Identidade própria na barra de tarefas; sem ela, o Windows agrupa a janela com o Python e usa o ícone dele.
+ID_APLICATIVO = "EliasEdenis.Facil"
 PREFERENCIAS = Path(os.environ.get("LOCALAPPDATA", ".")) / "ColetorEvidencias" / "preferencias.json"
 
 
@@ -466,6 +469,10 @@ class Api:
 
 
 def main() -> None:
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(ID_APLICATIVO)
+    except Exception:
+        pass
     api = Api()
     x, y, largura, altura = geometria_compacta()
     janela = webview.create_window(
@@ -483,7 +490,7 @@ def main() -> None:
 
     janela.events.closing += ao_tentar_fechar
     janela.events.closed += api.ao_fechar
-    webview.start()
+    webview.start(icon=str(ICONE) if ICONE.is_file() else None)
 
 
 if __name__ == "__main__":
