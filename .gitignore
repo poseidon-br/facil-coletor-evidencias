@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Coletas geradas em testes locais nunca entram no repositório
+coletas/
+COLETA_*/
+componentes/
+*.log

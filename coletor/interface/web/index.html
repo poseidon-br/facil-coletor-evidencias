@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fácil: Coletor de Evidências Digitais Intuitivo</title>
+<style>
+  /* Identidade: documento oficial brasileiro. Papel, tinta de caneta, carimbo de
+     protocolo, selo verde de autenticação e lacre vermelho. Só fontes do sistema
+     (Cambria, Segoe UI, Consolas), coerente com o princípio de nada externo. */
+  :root {
+    --papel: #fafaf7; --campo: #ffffff;
+    --tinta: #1c2b3a; --texto: #2a3138; --apoio: #5c666f;
+    --fio: #d5d9dc; --fio-forte: #b9c0c7;
+    --selo: #20603f; --lacre: #932432;
+    --alerta: #6b4400; --alerta-fundo: #fbf3e2; --alerta-borda: #c98a1b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", "Segoe UI Variable Text", Arial, sans-serif;
+         font-size: 14px; line-height: 1.5; color: var(--texto); background: var(--papel); }
+  header { padding: 14px 20px 10px; border-bottom: 4px double var(--tinta); }
+  header h1.marca { font-family: Gabriola, "Segoe Script", Cambria, serif; font-size: 42px;
+                    font-weight: 400; margin: 0; color: var(--tinta); line-height: .85; }
+  header .subtitulo { font-family: Cambria, Georgia, serif; font-size: 13.5px; color: var(--tinta);
+                      margin-top: 3px; }
+  header .sub { font-size: 12px; color: var(--apoio); margin-top: 1px; }
+  main { padding: 16px 20px 28px; }
+  section { display: none; }
+  section.ativa { display: block; }
+  h2 { font-family: Cambria, Georgia, serif; font-size: 17px; font-weight: 700;
+       color: var(--tinta); margin: 6px 0 10px; }
+  p { margin: 7px 0; }
+  ul { margin: 6px 0 6px 20px; padding: 0; }
+  .ajuda { color: var(--apoio); font-size: 12.5px; }
+  label { display: block; font-weight: 600; margin: 12px 0 4px; font-size: 13px; color: var(--tinta); }
+  input[type=text] { width: 100%; padding: 8px 10px; border: 1px solid var(--fio-forte);
+                     border-radius: 3px; font: inherit; background: var(--campo); color: var(--texto); }
+  input::placeholder { color: #9aa2a9; }
+  input[type=text]:focus-visible, button:focus-visible, input[type=radio]:focus-visible,
+  input[type=checkbox]:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
+  button { font: inherit; cursor: pointer; border-radius: 3px; border: 1px solid var(--fio-forte);
+           background: var(--campo); padding: 8px 12px; color: var(--tinta); }
+  button:hover:not(:disabled) { border-color: var(--tinta); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.principal { background: var(--tinta); color: #fff; border-color: var(--tinta); font-weight: 600; }
+  button.principal:hover:not(:disabled) { background: #0f1c29; }
+  button.perigo { background: var(--campo); color: var(--lacre); border-color: var(--lacre); font-weight: 600; }
+  button.largo { width: 100%; padding: 11px; margin-top: 12px; }
+  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .acao { text-align: left; padding: 10px 11px; min-height: 66px; }
+  .acao strong { display: block; font-family: Cambria, Georgia, serif; font-size: 14.5px; color: var(--tinta); }
+  .acao span { font-size: 12px; color: var(--apoio); }
+  .linha { display: flex; gap: 8px; align-items: center; }
+  .linha input { flex: 1; }
+  /* Carimbo de protocolo: a borda dupla destacada identifica a coleta e o token. */
+  .caixa { border: 1px solid var(--tinta); outline: 1px solid var(--tinta); outline-offset: 3px;
+           background: var(--campo); padding: 10px 14px; margin: 16px 4px 14px; }
+  .caixa strong { font-family: Consolas, monospace; font-size: 14.5px; letter-spacing: .5px; color: var(--tinta); }
+  .token { font-family: Consolas, monospace; font-size: 21px; font-weight: 700; letter-spacing: 2px;
+           text-align: center; color: var(--tinta); background: var(--campo);
+           border: 1px solid var(--tinta); outline: 1px solid var(--tinta); outline-offset: 3px;
+           padding: 12px 10px; margin: 14px 4px; user-select: all; }
+  .aviso { background: var(--alerta-fundo); border-left: 3px solid var(--alerta-borda);
+           padding: 8px 12px; margin: 10px 0; font-size: 12.5px; color: var(--alerta); }
+  .aviso ul { margin: 4px 0 0 18px; }
+  .aviso button { padding: 4px 9px; font-size: 12.5px; margin-top: 4px; }
+  .lista { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--fio); }
+  .lista li { display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+              padding: 8px 0; border-bottom: 1px solid var(--fio); font-size: 13px; }
+  .etiqueta { font-size: 12px; font-weight: 600; color: var(--selo); white-space: nowrap; }
+  .etiqueta.andamento { color: var(--alerta); }
+  .hash { font-family: Consolas, monospace; font-size: 11px; word-break: break-all; color: var(--apoio); }
+  .progresso { display: flex; gap: 10px; align-items: flex-start; padding: 14px 0; }
+  .giro { width: 18px; height: 18px; border: 3px solid var(--fio); border-top-color: var(--tinta);
+          border-radius: 50%; animation: giro 1s linear infinite; flex: none; margin-top: 2px; }
+  @keyframes giro { to { transform: rotate(360deg); } }
+  .gravando { display: inline-flex; align-items: center; gap: 6px; font-size: 12px;
+              color: var(--lacre); font-weight: 600; }
+  .gravando::before { content: ""; width: 9px; height: 9px; border-radius: 50%;
+                      background: var(--lacre); animation: pisca 1.2s infinite; }
+  .gravando.pausado { color: var(--apoio); } .gravando.pausado::before { background: var(--apoio); animation: none; }
+  @keyframes pisca { 50% { opacity: .2; } }
+  @media (prefers-reduced-motion: reduce) { .giro, .gravando::before { animation: none; } }
+  .passo { border-left: 3px solid var(--tinta); padding-left: 12px; margin: 10px 0; }
+  .passo strong { font-family: Cambria, Georgia, serif; font-size: 14.5px; color: var(--tinta); }
+  details { margin: 12px 0 0; }
+  summary { cursor: pointer; font-weight: 600; font-size: 13px; color: var(--tinta); }
+  .opcao { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; margin: 9px 0; font-size: 13.5px; }
+  .opcao input { margin-top: 3px; accent-color: var(--tinta); }
+  .ok { color: var(--selo); font-weight: 600; } .erro { color: var(--lacre); font-weight: 600; }
+  .rodape { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--fio);
+            font-size: 11.5px; color: var(--apoio); }
+  .creditos { margin-top: 16px; font-size: 11.5px; color: var(--apoio); }
+  .creditos a { color: var(--tinta); }
+  #mensagem { min-height: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="marca">Fácil</h1>
+  <div class="subtitulo">Coletor de Evidências Digitais Intuitivo</div>
+  <div class="sub" id="cabecalho-sub">Versão de desenvolvimento</div>
+</header>
+<main>
+
+<!-- ============================================================ INÍCIO -->
+<section id="tela-inicio" class="ativa">
+  <h2>Nova coleta</h2>
+  <p class="ajuda">Tudo o que você fizer a partir daqui fica registrado. Ao final, a ferramenta gera um relatório
+     pronto para juntar aos autos.</p>
+  <label for="operador">Seu nome</label>
+  <input type="text" id="operador" autocomplete="name">
+  <label for="qualificacao">Qualificação <span class="ajuda">(opcional)</span></label>
+  <input type="text" id="qualificacao" placeholder="Ex.: advogado, OAB/SC 00000">
+  <label for="referencia">Referência do caso <span class="ajuda">(opcional)</span></label>
+  <input type="text" id="referencia" placeholder="Ex.: número do processo ou do inquérito">
+  <label>Pasta onde a coleta será salva</label>
+  <div class="linha"><input type="text" id="pasta" readonly><button onclick="escolherPasta()">Alterar</button></div>
+  <details id="personalizacao">
+    <summary>Personalizar relatório (opcional)</summary>
+    <label for="orgao">Nome do órgão ou escritório</label>
+    <input type="text" id="orgao" placeholder="Ex.: 1ª Delegacia de Polícia de Exemplo">
+    <label>Logomarca <span class="ajuda">(aparece no cabeçalho do relatório)</span></label>
+    <div class="linha"><input type="text" id="logomarca" readonly>
+      <button onclick="escolherLogomarca()">Escolher</button>
+      <button onclick="limparLogomarca()">Remover</button></div>
+  </details>
+  <div id="aviso-componentes"></div>
+  <button class="principal largo" id="btn-iniciar" onclick="iniciar()">Iniciar coleta</button>
+  <button class="largo" onclick="abrirGuia()">Guia de uso</button>
+  <p class="creditos">Idealizado por Elias Edenis.
+     Site: <a href="#" onclick="abrirLink('site'); return false">eliasedenis.com.br</a>.
+     LinkedIn: <a href="#" onclick="abrirLink('linkedin'); return false">linkedin.com/in/pcedenis</a>.</p>
+</section>
+
+<!-- ============================================================ GUIA DE USO -->
+<section id="tela-guia">
+  <h2 id="guia-titulo"></h2>
+  <div id="guia-conteudo"></div>
+  <div class="linha" style="margin-top:14px">
+    <button id="guia-voltar" onclick="guiaNavegar(-1)" style="flex:1">Voltar</button>
+    <button class="principal" id="guia-avancar" onclick="guiaNavegar(1)" style="flex:1">Avançar</button>
+  </div>
+</section>
+
+<!-- ============================================================ PROGRESSO -->
+<section id="tela-progresso">
+  <div class="progresso"><div class="giro"></div><div id="texto-progresso">Aguarde...</div></div>
+  <p class="ajuda">Não feche esta janela.</p>
+</section>
+
+<!-- ============================================================ PAINEL -->
+<section id="tela-painel">
+  <div class="caixa">
+    <div class="ajuda">Coleta</div>
+    <div><strong id="identificador"></strong></div>
+  </div>
+  <div id="alertas-sessao"></div>
+
+  <h2>O que você quer coletar?</h2>
+  <div class="grade">
+    <button class="acao" onclick="mostrar('tela-site')"><strong>Site</strong><span>Página da internet, com gravação</span></button>
+    <button class="acao" onclick="preparaGravacao(abrirWhatsapp)"><strong>WhatsApp Web</strong><span>Conversa, com roteiro guiado</span></button>
+    <button class="acao" onclick="coletarArquivos('arquivos')"><strong>Arquivos</strong><span>Um ou mais arquivos do computador</span></button>
+    <button class="acao" onclick="coletarArquivos('pasta')"><strong>Pasta</strong><span>Uma pasta inteira</span></button>
+    <button class="acao" onclick="abrirUsb()"><strong>Pendrive ou disco USB</strong><span>Com bloqueio de escrita</span></button>
+    <button class="acao" onclick="coletarEml()"><strong>E-mail (.eml)</strong><span>Mensagem salva em arquivo</span></button>
+    <button class="acao" onclick="preparaGravacao(escolherMonitor)"><strong>Gravar a tela</strong><span>Explorar e abrir arquivos</span></button>
+  </div>
+  <button class="largo" onclick="testarSom()">Testar som</button>
+  <div id="resultado-som"></div>
+
+  <h2 style="margin-top:18px">Itens coletados</h2>
+  <ul class="lista" id="lista-itens"><li class="ajuda">Nenhum item ainda.</li></ul>
+  <div id="mensagem"></div>
+
+  <button class="perigo largo" onclick="encerrarColeta()">Encerrar coleta e gerar relatório</button>
+</section>
+
+<!-- ============================================================ SITE -->
+<section id="tela-site">
+  <h2>Coletar site</h2>
+  <p class="ajuda">Um navegador protegido vai abrir ao lado e tudo será gravado em vídeo, com som.
+     Navegue normalmente e registre prints das partes importantes.</p>
+  <label for="endereco">Endereço do site</label>
+  <input type="text" id="endereco" placeholder="www.exemplo.com.br/pagina">
+  <button class="principal largo" onclick="preparaGravacao(abrirSite)">Abrir site</button>
+  <button class="largo" onclick="mostrar('tela-painel')">Voltar</button>
+</section>
+
+<!-- ============================================================ USB -->
+<section id="tela-usb">
+  <h2>Coletar de pendrive ou disco USB</h2>
+  <div id="usb-conteudo"></div>
+  <div id="usb-mensagem"></div>
+</section>
+
+<!-- ============================================================ SOM ANTES DE GRAVAR -->
+<section id="tela-som">
+  <h2>Antes de gravar, teste o som</h2>
+  <p>Coloque o fone ou ligue a caixa de som. Um bipe curto vai tocar e a ferramenta vai conferir se consegue gravá-lo.</p>
+  <p class="ajuda">Se o antivírus perguntar se a ferramenta pode usar o microfone ou gravar som, permita: é assim que
+     o Windows chama a gravação do som que sai pelo fone ou pela caixa.</p>
+  <div id="resultado-som-previo"></div>
+  <button class="principal largo" onclick="testarSomPrevio()">Testar som</button>
+  <button class="largo" onclick="seguirSemTeste()">Gravar sem testar o som</button>
+  <button class="largo" onclick="mostrar('tela-painel')">Voltar</button>
+</section>
+
+<!-- ============================================================ MONITOR -->
+<section id="tela-monitor">
+  <h2>Qual tela gravar?</h2>
+  <p class="ajuda">Tudo o que aparecer nessa tela será gravado, com o som do computador.</p>
+  <div id="lista-monitores"></div>
+  <button class="largo" onclick="mostrar('tela-painel')">Voltar</button>
+</section>
+
+<!-- ============================================================ ITEM EM ANDAMENTO -->
+<section id="tela-item">
+  <div class="linha" style="justify-content:space-between">
+    <h2 id="titulo-item" style="margin:0"></h2>
+    <span class="gravando" id="indicador">Gravando</span>
+  </div>
+  <div id="alertas-item"></div>
+
+  <div id="roteiro"></div>
+
+  <div id="controles-livres">
+    <p class="ajuda" id="ajuda-item"></p>
+    <div id="bloco-print">
+      <label for="rotulo">Descrição do print <span class="ajuda">(opcional)</span></label>
+      <input type="text" id="rotulo" placeholder="Ex.: mensagem de 12/09">
+      <button class="principal largo" onclick="registrarPrint()">Registrar print</button>
+    </div>
+    <button class="largo" id="btn-pausa" onclick="alternarPausa()">Pausar gravação</button>
+  </div>
+  <div id="mensagem-item"></div>
+  <button class="perigo largo" onclick="encerrarItem()">Encerrar este item</button>
+</section>
+
+<!-- ============================================================ FINAL -->
+<section id="tela-final">
+  <h2>Coleta encerrada</h2>
+  <div class="caixa">
+    <div class="ajuda">Coleta</div><div><strong id="final-id"></strong></div>
+    <div class="ajuda" style="margin-top:8px">Hash do manifesto (cobre todos os arquivos)</div>
+    <div class="hash" id="final-manifesto"></div>
+    <div class="ajuda" style="margin-top:8px">Hash do relatório em PDF</div>
+    <div class="hash" id="final-pdf"></div>
+  </div>
+  <p class="ajuda">Anote o hash do relatório na petição, se quiser. Ele permite a qualquer pessoa conferir que o
+     arquivo juntado é o mesmo gerado pela ferramenta.</p>
+  <button class="principal largo" onclick="pywebview.api.abrir_relatorio()">Abrir relatório</button>
+  <button class="largo" onclick="pywebview.api.abrir_pasta()">Abrir pasta da coleta</button>
+  <button class="largo" onclick="location.reload()">Nova coleta</button>
+</section>
+
+<div class="rodape" id="rodape"></div>
+</main>
+
+<script>
+let itemAtual = null, passos = [], passoAtual = 0, pausado = false, aposSom = null, somTestado = false;
+const $ = id => document.getElementById(id);
+
+function mostrar(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('ativa', s.id === id));
+}
+function progresso(texto) { $('texto-progresso').textContent = texto; }
+function emProgresso(texto) { progresso(texto); mostrar('tela-progresso'); }
+function escapar(t) { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; }
+function avisos(lista) {
+  if (!lista || !lista.length) return '';
+  return '<div class="aviso"><strong>Atenção:</strong><ul>' + lista.map(a => '<li>' + escapar(a) + '</li>').join('') + '</ul></div>';
+}
+function erro(e, destino = 'mensagem') {
+  const texto = (e && e.message) ? e.message : String(e);
+  $(destino).innerHTML = '<p class="erro">' + escapar(texto) + '</p>';
+}
+
+let iniciado = false;
+async function carregar() {
+  if (iniciado) return; iniciado = true;
+  const estado = await pywebview.api.estado_inicial();
+  $('cabecalho-sub').textContent = 'Versão ' + estado.versao + ' (desenvolvimento)';
+  $('operador').value = estado.operador;
+  $('qualificacao').value = estado.qualificacao;
+  $('pasta').value = estado.pasta;
+  $('orgao').value = estado.orgao || '';
+  $('logomarca').value = estado.logomarca || '';
+  if (estado.orgao || estado.logomarca) $('personalizacao').open = true;
+  const faltando = Object.entries(estado.componentes).filter(([, ok]) => !ok).map(([n]) => n);
+  if (faltando.length) $('aviso-componentes').innerHTML = avisos(['Componentes não encontrados: ' + faltando.join(', ') + '.']);
+  if (estado.protecao_pendente) {
+    $('aviso-componentes').innerHTML += '<div class="aviso">O bloqueio de escrita em dispositivos USB ficou ativo ' +
+      'depois de uma coleta interrompida: novos dispositivos conectados ficam somente leitura. ' +
+      '<button onclick="restaurarPendente(this)">Desativar agora</button></div>';
+  }
+  $('rodape').textContent = 'Código aberto. Nenhum dado sai deste computador, exceto o hash enviado ao carimbo do tempo.';
+  if (!estado.guia_visto) abrirGuia();
+}
+
+async function restaurarPendente(botao) {
+  botao.disabled = true;
+  try {
+    const r = await pywebview.api.restaurar_protecao_pendente();
+    botao.parentElement.innerHTML = r.sucesso ? 'Bloqueio de escrita desativado.'
+      : 'O bloqueio não foi desativado: ' + escapar(r.erro || 'motivo desconhecido') + '.';
+  } catch (e) { botao.disabled = false; }
+}
+window.addEventListener('pywebviewready', carregar);
+if (window.pywebview && window.pywebview.api && window.pywebview.api.estado_inicial) carregar();
+
+async function escolherPasta() {
+  const p = await pywebview.api.escolher_pasta();
+  if (p) $('pasta').value = p;
+}
+async function escolherLogomarca() {
+  const p = await pywebview.api.escolher_logomarca();
+  if (p) $('logomarca').value = p;
+}
+function limparLogomarca() { $('logomarca').value = ''; }
+async function abrirLink(qual) { try { await pywebview.api.abrir_link(qual); } catch (e) {} }
+
+// ---------------------------------------------------------------- guia de uso
+let guiaPagina = 0, guiaMostrado = false, escolhaAntivirus = null, guiaNaoMostrar = false;
+const GUIA = [
+  {titulo: 'Bem-vindo',
+   html: '<p>Esta ferramenta coleta evidências digitais e, ao final, gera um relatório pronto para juntar aos autos.</p>' +
+     '<p>Cada arquivo recebe um hash (impressão digital matemática que denuncia qualquer alteração), cada ação ' +
+     'entra num log encadeado (registro em que cada linha depende da anterior, de modo que qualquer mudança quebra ' +
+     'a sequência) e a coleta recebe carimbos do tempo de servidores independentes, que fixam quando ela ocorreu.</p>' +
+     '<p class="ajuda">A ferramenta registra a existência do conteúdo. Ela não atesta quem é o autor nem a veracidade ' +
+     'do que ele afirma.</p>'},
+  {titulo: 'Antivírus',
+   html: '<p>Recomendamos desativar temporariamente a proteção do antivírus, apenas durante a coleta, reativando ao ' +
+     'final. São dois os motivos:</p>' +
+     '<p><strong>1.</strong> Antivírus às vezes bloqueiam por engano programas que gravam a tela e o som ' +
+     '(os chamados falsos positivos), o que pode interromper a coleta.</p>' +
+     '<p><strong>2.</strong> Alguns antivírus se colocam no meio das conexões seguras e apresentam ao navegador um ' +
+     'certificado próprio no lugar do certificado original do site (certificado interposto). A ferramenta detecta e ' +
+     'registra essa interposição, mas nesse caso o relatório deixa de poder afirmar que o certificado original do ' +
+     'site foi conferido.</p>' +
+     '<p class="ajuda">A escolha é sua: a coleta funciona dos dois jeitos, e o que você decidir fica registrado no ' +
+     'relatório.</p>' +
+     '<label class="opcao"><input type="radio" name="antivirus" value="desativado temporariamente">Desativei temporariamente o antivírus</label>' +
+     '<label class="opcao"><input type="radio" name="antivirus" value="mantido ativado">Vou manter o antivírus ativado</label>' +
+     '<label class="opcao"><input type="radio" name="antivirus" value="somente Windows Defender">Este computador só tem o Windows Defender</label>'},
+  {titulo: 'Preparação do ambiente',
+   html: '<p>Antes de começar, algumas recomendações:</p><ul>' +
+     '<li>Feche os programas que não vai usar: menos janelas e notificações aparecendo na gravação.</li>' +
+     '<li>Ative o assistente de foco do Windows, para silenciar notificações.</li>' +
+     '<li>Num notebook, conecte o carregador.</li>' +
+     '<li>Mantenha a internet ligada: ela é usada para os carimbos do tempo.</li></ul>' +
+     '<label class="opcao"><input type="checkbox" id="guia-nao-mostrar">Não mostrar este guia nas próximas coletas</label>'},
+];
+function abrirGuia() { guiaMostrado = true; guiaPagina = 0; desenharGuia(); mostrar('tela-guia'); }
+function desenharGuia() {
+  const p = GUIA[guiaPagina];
+  $('guia-titulo').textContent = 'Guia de uso (' + (guiaPagina + 1) + ' de ' + GUIA.length + '): ' + p.titulo;
+  $('guia-conteudo').innerHTML = p.html;
+  if (guiaPagina === 1 && escolhaAntivirus) {
+    const marcado = document.querySelector('input[name=antivirus][value="' + escolhaAntivirus + '"]');
+    if (marcado) marcado.checked = true;
+  }
+  if (guiaPagina === 2) $('guia-nao-mostrar').checked = guiaNaoMostrar;
+  $('guia-voltar').style.visibility = guiaPagina === 0 ? 'hidden' : 'visible';
+  $('guia-avancar').textContent = guiaPagina === GUIA.length - 1 ? 'Concluir' : 'Avançar';
+}
+function guardarPaginaGuia() {
+  if (guiaPagina === 1) {
+    const marcado = document.querySelector('input[name=antivirus]:checked');
+    escolhaAntivirus = marcado ? marcado.value : escolhaAntivirus;
+  }
+  if (guiaPagina === 2) guiaNaoMostrar = $('guia-nao-mostrar').checked;
+}
+async function guiaNavegar(delta) {
+  guardarPaginaGuia();
+  if (guiaPagina === GUIA.length - 1 && delta > 0) {
+    try { await pywebview.api.concluir_guia(guiaNaoMostrar); } catch (e) {}
+    mostrar('tela-inicio');
+    return;
+  }
+  guiaPagina += delta;
+  desenharGuia();
+}
+
+async function iniciar() {
+  emProgresso('Abrindo a coleta...');
+  try {
+    guardarPaginaGuia();
+    const r = await pywebview.api.iniciar($('operador').value, $('qualificacao').value, $('referencia').value,
+                                          $('pasta').value, {mostrado: guiaMostrado, escolha_antivirus: escolhaAntivirus},
+                                          $('orgao').value, $('logomarca').value);
+    $('identificador').textContent = r.identificador;
+    $('alertas-sessao').innerHTML = avisos(r.alertas);
+    mostrar('tela-painel');
+  } catch (e) { mostrar('tela-inicio'); alert(e.message || e); }
+}
+
+function desenharItens(lista) {
+  if (!lista.length) return;
+  const nomes = {site: 'Site', whatsapp: 'WhatsApp Web', arquivo: 'Arquivo', eml: 'E-mail', tela: 'Gravação da tela'};
+  $('lista-itens').innerHTML = lista.map(i =>
+    '<li><span><strong>' + i.numero + '</strong> ' + nomes[i.tipo] + ': ' + escapar(i.descricao) + '</span>' +
+    '<span class="etiqueta ' + (i.situacao === 'em andamento' ? 'andamento' : '') + '">' + i.situacao + '</span></li>').join('');
+}
+let itensTela = [];
+function acrescentar(novos) { itensTela = itensTela.concat(novos); desenharItens(itensTela); }
+function marcarColetado(numero) { itensTela.forEach(i => { if (i.numero === numero) i.situacao = 'coletado'; }); desenharItens(itensTela); }
+
+async function coletarArquivos(modo) {
+  $('mensagem').innerHTML = '';
+  try {
+    emProgresso('Escolha o que coletar na janela que abriu...');
+    const novos = await pywebview.api.coletar_arquivos(modo);
+    acrescentar(novos);
+  } catch (e) { erro(e); }
+  mostrar('tela-painel');
+}
+
+async function coletarEml() {
+  $('mensagem').innerHTML = '';
+  try {
+    emProgresso('Escolha o arquivo .eml na janela que abriu...');
+    acrescentar(await pywebview.api.coletar_eml());
+  } catch (e) { erro(e); }
+  mostrar('tela-painel');
+}
+
+// ---------------------------------------------------------------- USB com bloqueio de escrita
+let usbTimer = null, usbLetra = null, usbComBloqueio = false;
+function pararUsbTimer() { if (usbTimer) { clearInterval(usbTimer); usbTimer = null; } }
+function abrirUsb() { usbLetra = null; usbComBloqueio = false; desenharUsb('aviso'); mostrar('tela-usb'); }
+
+function desenharUsb(fase) {
+  $('usb-mensagem').innerHTML = '';
+  if (fase === 'aviso') {
+    $('usb-conteudo').innerHTML =
+      '<div class="aviso"><strong>Não conecte o dispositivo ainda.</strong></div>' +
+      '<p>Para impedir qualquer gravação no pendrive ou no disco, a ferramenta ativa uma proteção do próprio ' +
+      'Windows, o bloqueio de escrita em dispositivos USB, antes de o dispositivo ser conectado.</p>' +
+      '<p class="ajuda">Essa configuração exige confirmação de administrador: o Windows vai abrir uma janela ' +
+      'de confirmação, que pode aparecer em nome do Python, o programa que executa a ferramenta. Ao final da ' +
+      'coleta, a configuração é desfeita, com nova confirmação.</p>' +
+      '<button class="principal largo" onclick="usbAtivar()">Ativar o bloqueio de escrita</button>' +
+      '<button class="largo" onclick="usbSemBloqueio()">Seguir sem o bloqueio</button>' +
+      '<button class="largo" onclick="mostrar(\'tela-painel\')">Voltar</button>';
+  } else if (fase === 'aguardando') {
+    $('usb-conteudo').innerHTML =
+      (usbComBloqueio ? '<p class="ok">Bloqueio de escrita ativado e conferido.</p>'
+                      : '<p class="alerta">Seguindo sem o bloqueio de escrita. Isso constará do relatório.</p>') +
+      '<p><strong>Conecte agora o dispositivo USB.</strong> Ele aparecerá na lista abaixo.</p>' +
+      '<div id="usb-lista"><p class="ajuda">Procurando dispositivos USB...</p></div>' +
+      '<button class="largo" onclick="usbCancelar()">Cancelar</button>';
+    pararUsbTimer();
+    usbListar();
+    usbTimer = setInterval(usbListar, 3000);
+  } else if (fase === 'coletar') {
+    $('usb-conteudo').innerHTML =
+      '<p>Dispositivo registrado: unidade <strong>' + escapar(usbLetra) + ':</strong></p>' +
+      '<div id="usb-estado"></div>' +
+      '<p>Escolha o que copiar desse dispositivo.</p>' +
+      '<div class="grade">' +
+      '<button class="acao" onclick="coletarUsb(\'arquivos\')"><strong>Arquivos</strong><span>Um ou mais arquivos</span></button>' +
+      '<button class="acao" onclick="coletarUsb(\'pasta\')"><strong>Pasta</strong><span>Uma pasta inteira</span></button>' +
+      '</div>' +
+      '<button class="principal largo" onclick="usbConcluir()">Concluir: remover o dispositivo' +
+      (usbComBloqueio ? ' e desativar o bloqueio' : '') + '</button>';
+  }
+}
+async function usbAtivar() {
+  $('usb-mensagem').innerHTML = '<p class="ajuda">Aguardando a confirmação do Windows...</p>';
+  try {
+    const r = await pywebview.api.ativar_protecao_usb();
+    if (r.sucesso) { usbComBloqueio = true; desenharUsb('aguardando'); }
+    else {
+      $('usb-mensagem').innerHTML = '<p class="erro">O bloqueio não foi ativado: ' + escapar(r.erro || 'motivo desconhecido') +
+        '.</p><p class="ajuda">Você pode tentar de novo ou seguir sem o bloqueio.</p>';
+    }
+  } catch (e) { erro(e, 'usb-mensagem'); }
+}
+async function usbSemBloqueio() {
+  if (!confirm('Seguir sem o bloqueio de escrita? Isso ficará registrado no relatório.')) return;
+  try { await pywebview.api.seguir_sem_bloqueio_usb(); usbComBloqueio = false; desenharUsb('aguardando'); }
+  catch (e) { erro(e, 'usb-mensagem'); }
+}
+async function usbListar() {
+  try {
+    const lista = await pywebview.api.listar_volumes_usb();
+    if (!document.getElementById('usb-lista')) return;
+    if (!lista.length) { $('usb-lista').innerHTML = '<p class="ajuda">Nenhum dispositivo USB com unidade visível ainda.</p>'; return; }
+    $('usb-lista').innerHTML = lista.map(v =>
+      '<button class="largo" onclick="usbEscolher(\'' + escapar(v.letra) + '\')">Unidade ' + escapar(v.letra) + ':' +
+      (v.rotulo ? ' "' + escapar(v.rotulo) + '"' : '') + (v.dispositivo ? ' (' + escapar(v.dispositivo) + ')' : '') +
+      '</button>').join('');
+  } catch (e) { /* tenta de novo no próximo ciclo */ }
+}
+async function usbEscolher(letra) {
+  pararUsbTimer();
+  $('usb-mensagem').innerHTML = '<p class="ajuda">Registrando o dispositivo...</p>';
+  try {
+    const r = await pywebview.api.registrar_dispositivo_usb(letra);
+    usbLetra = letra;
+    desenharUsb('coletar');
+    $('usb-estado').innerHTML = r.protecao_ativa
+      ? '<p class="ok">Bloqueio de escrita ativo' + (r.teste_somente_leitura === true ? ' e confirmado por teste de gravação recusada' : '') + '.</p>'
+      : '<p class="alerta">Dispositivo registrado sem bloqueio de escrita.</p>';
+  } catch (e) { erro(e, 'usb-mensagem'); desenharUsb('aguardando'); }
+}
+async function coletarUsb(modo) {
+  $('usb-mensagem').innerHTML = '';
+  try {
+    emProgresso('Escolha o que coletar na janela que abriu...');
+    const novos = await pywebview.api.coletar_arquivos_usb(modo);
+    acrescentar(novos);
+    mostrar('tela-usb');
+    if (novos.length) $('usb-mensagem').innerHTML = '<p class="ok">' + novos.length + ' item(ns) coletado(s). Você pode coletar mais ou concluir.</p>';
+  } catch (e) { mostrar('tela-usb'); erro(e, 'usb-mensagem'); }
+}
+async function usbConcluir() {
+  pararUsbTimer();
+  if (usbComBloqueio) {
+    if (!confirm('Remova o dispositivo USB antes de concluir. O Windows vai pedir confirmação para desativar o bloqueio. Continuar?')) return;
+    $('usb-mensagem').innerHTML = '<p class="ajuda">Desativando o bloqueio de escrita...</p>';
+    try {
+      const r = await pywebview.api.restaurar_protecao_usb();
+      if (!r.sucesso) {
+        $('usb-mensagem').innerHTML = '<p class="erro">O bloqueio não foi desativado: ' + escapar(r.erro || 'motivo desconhecido') +
+          '. Novos dispositivos USB ficarão somente leitura até a desativação, que será oferecida na próxima abertura da ferramenta.</p>';
+        return;
+      }
+    } catch (e) { erro(e, 'usb-mensagem'); return; }
+  }
+  usbLetra = null; usbComBloqueio = false;
+  mostrar('tela-painel');
+}
+function usbCancelar() { pararUsbTimer(); usbConcluir(); }
+
+function mostrarSom(r, destino) {
+  if (r.captado) {
+    $(destino).innerHTML = '<p class="ok">Som captado pela saída "' + escapar(r.saida) + '".</p>';
+  } else {
+    $(destino).innerHTML = '<p class="erro">O bipe não foi captado na saída "' + escapar(r.saida || 'desconhecida') +
+      '". Confira se o volume não está no mudo e se o fone ou a caixa estão ligados, e teste de novo.</p>';
+  }
+}
+async function testarSom() {
+  $('resultado-som').innerHTML = '<p class="ajuda">Tocando o bipe...</p>';
+  try { const r = await pywebview.api.testar_som(); somTestado = somTestado || r.captado; mostrarSom(r, 'resultado-som'); }
+  catch (e) { erro(e, 'resultado-som'); }
+}
+function preparaGravacao(seguir) {
+  aposSom = seguir;
+  if (somTestado) { seguir(); return; }
+  $('resultado-som-previo').innerHTML = '';
+  mostrar('tela-som');
+}
+async function testarSomPrevio() {
+  $('resultado-som-previo').innerHTML = '<p class="ajuda">Tocando o bipe...</p>';
+  try {
+    const r = await pywebview.api.testar_som();
+    mostrarSom(r, 'resultado-som-previo');
+    if (r.captado) { somTestado = true; setTimeout(() => aposSom(), 900); }
+  } catch (e) { erro(e, 'resultado-som-previo'); }
+}
+function seguirSemTeste() { aposSom(); }
+
+function telaItem(titulo, ajuda, comPrint) {
+  pausado = false;
+  $('titulo-item').textContent = titulo;
+  $('ajuda-item').textContent = ajuda;
+  $('bloco-print').style.display = comPrint ? '' : 'none';
+  $('indicador').className = 'gravando'; $('indicador').textContent = 'Gravando';
+  $('btn-pausa').textContent = 'Pausar gravação';
+  $('mensagem-item').innerHTML = ''; $('rotulo').value = '';
+  mostrar('tela-item');
+}
+
+async function abrirSite() {
+  emProgresso('Abrindo o navegador protegido...');
+  try {
+    const r = await pywebview.api.abrir_navegador('site', $('endereco').value);
+    itemAtual = r.numero; acrescentar([{numero: r.numero, tipo: 'site', descricao: r.descricao, situacao: 'em andamento'}]);
+    $('roteiro').innerHTML = ''; $('controles-livres').style.display = '';
+    telaItem(r.numero + '. Site', 'Navegue no site ao lado. Registre um print de cada parte importante.', true);
+    $('alertas-item').innerHTML = avisos(r.alertas);
+  } catch (e) { mostrar('tela-site'); alert(e.message || e); }
+}
+
+async function abrirWhatsapp() {
+  emProgresso('Abrindo o WhatsApp Web no navegador protegido...');
+  try {
+    const r = await pywebview.api.abrir_navegador('whatsapp');
+    itemAtual = r.numero; passos = r.passos; passoAtual = 0;
+    acrescentar([{numero: r.numero, tipo: 'whatsapp', descricao: r.descricao, situacao: 'em andamento'}]);
+    telaItem(r.numero + '. WhatsApp Web', 'Navegue na conversa e registre prints das mensagens importantes.', true);
+    $('alertas-item').innerHTML = avisos(r.alertas);
+    desenharPasso();
+  } catch (e) { mostrar('tela-painel'); alert(e.message || e); }
+}
+
+function desenharPasso() {
+  if (passoAtual >= passos.length) {
+    $('roteiro').innerHTML = '<p class="ok">Identificação concluída.</p>';
+    $('controles-livres').style.display = '';
+    return;
+  }
+  const p = passos[passoAtual];
+  $('controles-livres').style.display = 'none';
+  $('roteiro').innerHTML =
+    (passoAtual === 0 ? '<div class="ajuda">Se o WhatsApp ainda não estiver conectado, leia o QR Code com o celular para entrar.</div>' : '') +
+    '<div class="passo"><strong>Passo ' + (passoAtual + 1) + ' de ' + passos.length + ': ' + escapar(p.rotulo) + '</strong>' +
+    '<p>' + escapar(p.instrucao) + '</p></div>' +
+    (p.com_token ? '<div class="token">' + escapar(p.token) + '</div>' +
+      '<button class="largo" onclick="copiarToken()">Copiar o código</button>' : '') +
+    '<button class="principal largo" onclick="registrarPasso()">Registrar</button>' +
+    '<button class="largo" onclick="pularPasso()">Pular este passo</button>' +
+    '<button class="largo" id="btn-pausa-roteiro" onclick="alternarPausa()">' + (pausado ? 'Retomar gravação' : 'Pausar gravação') + '</button>';
+}
+async function registrarPasso() {
+  try {
+    await pywebview.api.registrar_print(passos[passoAtual].rotulo, passoAtual + 1);
+    passoAtual++; desenharPasso();
+  } catch (e) { erro(e, 'mensagem-item'); }
+}
+async function copiarToken() {
+  try {
+    await pywebview.api.copiar_token();
+    $('mensagem-item').innerHTML = '<p class="ok">Código copiado. Cole na conversa com você mesmo e envie.</p>';
+  } catch (e) { erro(e, 'mensagem-item'); }
+}
+async function pularPasso() {
+  if (!confirm('Pular este passo? Isso ficará registrado no relatório.')) return;
+  await pywebview.api.pular_passo(passoAtual + 1);
+  passoAtual++; desenharPasso();
+}
+
+async function registrarPrint() {
+  $('mensagem-item').innerHTML = '<p class="ajuda">Registrando...</p>';
+  try {
+    const r = await pywebview.api.registrar_print($('rotulo').value || 'print', null);
+    $('mensagem-item').innerHTML = '<p class="ok">Print registrado.</p><div class="hash">' + r.sha256 + '</div>';
+    $('rotulo').value = '';
+  } catch (e) { erro(e, 'mensagem-item'); }
+}
+
+async function alternarPausa() {
+  try {
+    if (pausado) { await pywebview.api.retomar(); } else { await pywebview.api.pausar(); }
+    pausado = !pausado;
+    $('indicador').className = 'gravando' + (pausado ? ' pausado' : '');
+    $('indicador').textContent = pausado ? 'Pausado' : 'Gravando';
+    $('btn-pausa').textContent = pausado ? 'Retomar gravação' : 'Pausar gravação';
+    if ($('btn-pausa-roteiro')) $('btn-pausa-roteiro').textContent = $('btn-pausa').textContent;
+  } catch (e) { erro(e, 'mensagem-item'); }
+}
+
+async function encerrarItem() {
+  emProgresso('Encerrando o item...');
+  try { await pywebview.api.encerrar_item(); } catch (e) { erro(e); }
+  marcarColetado(itemAtual); itemAtual = null;
+  mostrar('tela-painel');
+}
+function itemTerminou() {
+  // O navegador foi fechado diretamente pelo usuário.
+  if (itemAtual) { marcarColetado(itemAtual); itemAtual = null; mostrar('tela-painel'); }
+}
+
+async function escolherMonitor() {
+  const lista = await pywebview.api.monitores();
+  if (lista.length === 1) { gravarTela(1); return; }
+  $('lista-monitores').innerHTML = lista.map(m =>
+    '<button class="largo" onclick="gravarTela(' + m.indice + ')">Tela ' + m.indice + ' (' + m.largura + ' x ' + m.altura + ')' +
+    (m.esquerda === 0 && m.topo === 0 ? ', principal' : '') + '</button>').join('');
+  mostrar('tela-monitor');
+}
+async function gravarTela(indice) {
+  emProgresso('Iniciando a gravação da tela...');
+  try {
+    const r = await pywebview.api.gravar_tela(indice);
+    itemAtual = r.numero; acrescentar([r]);
+    $('roteiro').innerHTML = ''; $('controles-livres').style.display = '';
+    telaItem(r.numero + '. Gravação da tela', 'Abra as pastas e os arquivos que quer mostrar. Tudo o que aparecer na tela ' + indice + ' está sendo gravado, com o som do computador.', false);
+    $('alertas-item').innerHTML = '';
+  } catch (e) { mostrar('tela-painel'); alert(e.message || e); }
+}
+
+async function encerrarColeta() {
+  if (!confirm('Encerrar a coleta? Depois disso não é possível acrescentar itens.')) return;
+  emProgresso('Encerrando a coleta...');
+  try {
+    const r = await pywebview.api.encerrar_coleta();
+    $('final-id').textContent = r.identificador;
+    $('final-manifesto').textContent = r.hash_manifesto;
+    $('final-pdf').innerHTML = r.pdf.map(p => escapar(p.arquivo) + ': ' + p.sha256).join('<br>');
+    mostrar('tela-final');
+  } catch (e) { mostrar('tela-painel'); erro(e); }
+}
+</script>
+</body>
+</html>

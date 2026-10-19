@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Coleta {{ r.identificador }}</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10pt; color: #1a1a1a; line-height: 1.4; margin: 0; }
+  .tela body, body.tela { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 16pt; margin: 0 0 2px 0; }
+  h2 { font-size: 12pt; margin: 18px 0 6px 0; padding-bottom: 3px; border-bottom: 1.5px solid #1f3a5f; color: #1f3a5f; }
+  h3 { font-size: 10.5pt; margin: 12px 0 4px 0; }
+  p { margin: 4px 0; }
+  .sub { color: #555; }
+  .orgao { font-size: 16pt; font-weight: 700; text-transform: uppercase; color: #1a1a1a; }
+  .cabecalho { border-bottom: 3px solid #1f3a5f; padding-bottom: 6px; margin-bottom: 10px; }
+  .dev { background: #fff3cd; border: 1px solid #e0b100; padding: 6px 8px; margin: 8px 0; font-size: 9pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 8px 0; font-size: 9pt; }
+  th, td { border: 1px solid #c8ced6; padding: 3px 5px; text-align: left; vertical-align: top; }
+  th { background: #eef2f6; font-weight: 600; }
+  .hash { font-family: Consolas, "Courier New", monospace; font-size: 7.6pt; word-break: break-all; }
+  .ok { color: #1d6b2f; font-weight: 600; white-space: nowrap; }
+  .alerta { color: #a33a00; font-weight: 600; }
+  td.ok, td.alerta { white-space: nowrap; }
+  .caixa { border: 1px solid #c8ced6; padding: 6px 8px; margin: 6px 0; background: #fafbfc; }
+  .ficha { break-before: page; }
+  .anexo { break-before: page; }
+  .miniaturas { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+  .miniaturas figure { margin: 0; width: 31%; break-inside: avoid; }
+  .miniaturas img { width: 100%; border: 1px solid #c8ced6; }
+  .miniaturas figcaption { font-size: 7.5pt; color: #444; }
+  dl { display: grid; grid-template-columns: 34% 66%; gap: 2px 8px; margin: 4px 0; }
+  dt { color: #555; } dd { margin: 0; }
+  .nota { font-size: 8.5pt; color: #444; font-style: italic; }
+  ol, ul { margin: 4px 0 4px 18px; padding: 0; }
+  .rodape { margin-top: 16px; font-size: 8pt; color: #555; border-top: 1px solid #c8ced6; padding-top: 4px; }
+  a { color: #1f3a5f; }
+</style>
+</head>
+<body class="{{ 'tela' if modo == 'html' else 'impressao' }}">
+
+{% if incluir_sintese %}
+<div class="cabecalho">
+  {% set pers = r.personalizacao %}
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px">
+    <div>
+      {% if pers and pers.orgao %}<div class="orgao">{{ pers.orgao }}</div>{% endif %}
+      <h1>Relatório de Coleta de Evidências Digitais</h1>
+      <div class="sub">Coleta <strong>{{ r.identificador }}</strong>{% if parte %} &middot; Parte {{ parte }}{% endif %}</div>
+    </div>
+    {% if pers and pers.data_uri %}<img src="{{ pers.data_uri }}" alt="Logomarca" style="max-height:52px; max-width:160px; flex:none">{% endif %}
+  </div>
+</div>
+
+{% if not r.ferramenta.oficial %}
+<div class="dev"><strong>Versão de desenvolvimento.</strong> Este relatório foi gerado por uma versão de teste da
+ferramenta, sem build oficial assinado. Os registros e hashes são calculados normalmente, mas a versão não pode ser
+conferida com uma publicação oficial.</div>
+{% endif %}
+
+<h2>Identificação</h2>
+<dl>
+  {% if r.personalizacao and r.personalizacao.orgao %}<dt>Órgão ou escritório</dt><dd>{{ r.personalizacao.orgao }}</dd>{% endif %}
+  <dt>Operador</dt><dd>{{ r.operador }}</dd>
+  {% if r.qualificacao %}<dt>Qualificação</dt><dd>{{ r.qualificacao }}</dd>{% endif %}
+  {% if r.referencia %}<dt>Referência</dt><dd>{{ r.referencia }}</dd>{% endif %}
+</dl>
+
+<h2>A ferramenta e o método</h2>
+{% for titulo, texto in textos.METODO_SINTESE %}
+<p><strong>{{ titulo }}.</strong> {{ texto }}</p>
+{% endfor %}
+{% if r.protecao %}
+<p><strong>O registro de tráfego (HAR).</strong> {{ textos.METODO_HAR }}</p>
+{% endif %}
+
+<h2>Resumo</h2>
+<p>Início: {{ r.inicio }}. Fim: {{ r.fim }}. Duração: {{ r.duracao }}.</p>
+<table>
+  <tr><th>Item</th><th>Tipo</th><th>Descrição</th><th>Horário</th><th>SHA-256 ou arquivos</th></tr>
+  {% for i in r.itens %}
+  <tr>
+    <td>{{ i.numero }}</td><td>{{ i.nome_tipo }}</td><td>{{ i.descricao }}</td>
+    <td>{{ i.inicio }}{% if i.fim %} a {{ i.fim }}{% endif %}</td>
+    <td>{% if i.sha256_unico %}<span class="hash">{{ i.sha256_unico }}</span>{% else %}{{ i.quantidade_arquivos }} arquivo(s), ver ficha{% endif %}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">Nenhuma evidência coletada.</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Confiabilidade</h2>
+<table>
+  <tr><th>Verificação</th><th style="width:16%">Situação</th></tr>
+  {% for l in r.quadro %}
+  <tr><td>{{ l.texto }}</td><td class="{{ 'ok' if l.situacao == 'Conferido' else 'alerta' }}">{{ l.situacao }}</td></tr>
+  {% endfor %}
+</table>
+
+{% if r.protecao %}
+<h2>Proteção contra alteração da página</h2>
+<p>{{ textos.PROTECAO_SINTESE }} Resultado:
+{% if r.protecao.deteccoes %}{{ r.protecao.deteccoes|length }} tentativa(s) de abertura foram detectadas e interrompidas, nos horários listados em Ocorrências.{% else %}nenhuma tentativa de abertura foi detectada.{% endif %}</p>
+{% endif %}
+
+{% if r.token_whatsapp %}
+<h2>Token de verificação do WhatsApp</h2>
+<p>Durante a coleta do WhatsApp Web, a ferramenta gerou o token de verificação
+<strong>{{ r.token_whatsapp.token }}</strong> e o roteiro pediu ao operador que o enviasse como mensagem à
+própria conta. {{ textos.TOKEN_SINTESE_TECNICA }} {{ textos.TOKEN_SINTESE_SIMPLES }}
+{% if not r.token_whatsapp.registrado %}<span class="alerta">{{ textos.TOKEN_NAO_REGISTRADO }}</span>{% endif %}</p>
+{% endif %}
+
+<h2>Integridade do conjunto</h2>
+<p>Hash do manifesto, que cobre os {{ r.quantidade_arquivos_manifesto }} arquivos do pacote:</p>
+<p class="hash">{{ r.hash_manifesto }}</p>
+
+<h2>O que este relatório atesta e o que não atesta</h2>
+{% for nome, atesta, nao in r.atesta %}
+<p><strong>{{ nome }}.</strong> Atesta {{ atesta }} Não atesta {{ nao }}</p>
+{% endfor %}
+
+<h2>Ocorrências</h2>
+{% if r.ocorrencias %}
+<table>
+  <tr><th style="width:10%">Hora</th><th>Descrição</th><th style="width:12%">Gravidade</th></tr>
+  {% for o in r.ocorrencias %}
+  <tr><td>{{ o.hora }}</td><td>{% if o.item %}{{ o.item }}: {% endif %}{{ o.descricao }}</td>
+      <td class="{{ 'alerta' if o.gravidade == 'alerta' else '' }}">{{ 'Alerta' if o.gravidade == 'alerta' else 'Informação' }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}<p>Nenhuma.</p>{% endif %}
+
+<h2>Como verificar</h2>
+<ol>{% for passo in textos.COMO_VERIFICAR %}<li>{{ passo }}</li>{% endfor %}</ol>
+{% endif %}
+
+{# ================================================================ FICHAS #}
+{% for i in itens_ficha %}
+<section class="ficha">
+<h2>{{ i.numero }}. {{ i.nome_tipo }}</h2>
+
+{% if i.tipo == 'arquivo' %}
+  <p>Origem: {{ i.dados_inicio.origem }}{% if i.dados_inicio.pasta %} (pasta){% endif %}</p>
+  {% set v = i.dados_inicio.volume_origem %}
+  <p>Mídia de origem: unidade {{ v.raiz }}{% if v.rotulo %} "{{ v.rotulo }}"{% endif %}{% if v.sistema_arquivos %}, {{ v.sistema_arquivos }}{% endif %}{% if v.numero_serie %}, número de série do volume {{ v.numero_serie }}{% endif %}{% if v.dispositivo %}, dispositivo {{ v.dispositivo }}{% endif %}{% if v.serie_dispositivo %} (série {{ v.serie_dispositivo }}){% endif %}.</p>
+  {% if i.dados_inicio.coleta_usb %}
+    {% set p = i.dados_inicio.protecao_escrita %}
+    {% if p and p.ativa %}
+    <p>Bloqueio de escrita: ativado antes da conexão do dispositivo ({{ p.metodo }}), conferido por leitura
+       do registro{% if p.teste_somente_leitura %} e por teste de gravação recusada pelo Windows{% endif %},
+       e mantido durante a cópia.</p>
+    {% else %}
+    <p class="alerta">Dispositivo USB coletado sem o bloqueio de escrita.</p>
+    {% endif %}
+  {% endif %}
+  <p>Arquivos copiados: {{ i.dados_fim.copiados }} de {{ i.dados_fim.arquivos }}.</p>
+  <table>
+    <tr><th>Arquivo</th><th>Tamanho</th><th>Criação / modificação</th><th>SHA-256 (origem e cópia)</th></tr>
+    {% for c in i.copias %}
+    <tr>
+      <td>{% if modo == 'html' %}<a href="{{ c.arquivo }}">{{ c.nome }}</a>{% else %}{{ c.nome }}{% endif %}
+          <br><span class="nota">{{ c.origem }}</span>
+          {% if c.origem_download %}<br><span class="nota">Baixado de: {{ c.origem_download }}</span>{% endif %}
+          {% if c.acima_limite %}<br><span class="alerta">Acima de 10 MB: não cabe numa única juntada no PJe ou eproc.</span>{% endif %}</td>
+      <td>{{ c.tamanho_legivel }}</td>
+      <td>{{ c.criacao }}<br>{{ c.modificacao }}</td>
+      <td><span class="hash">{{ c.sha256_origem }}</span><br>
+          {% if c.copia_confere %}<span class="ok">Cópia idêntica</span>{% else %}<span class="alerta">Cópia diferente:</span> <span class="hash">{{ c.sha256 }}</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+{% elif i.tipo == 'eml' %}
+  {% set c = i.cabecalhos %}
+  <dl>
+    <dt>Remetente</dt><dd>{{ c.remetente }}</dd>
+    <dt>Destinatários</dt><dd>{{ c.destinatarios }}</dd>
+    {% if c.copia %}<dt>Cópia</dt><dd>{{ c.copia }}</dd>{% endif %}
+    <dt>Assunto</dt><dd>{{ c.assunto }}</dd>
+    <dt>Data declarada</dt><dd>{{ c.data_legivel or c.data_declarada }}</dd>
+    <dt>Identificador</dt><dd>{{ c.identificador_mensagem }}</dd>
+  </dl>
+  {% for e in i.copias %}<p>Arquivo {{ e.nome }} ({{ e.tamanho_legivel }}), SHA-256 <span class="hash">{{ e.sha256 }}</span>
+     {% if e.copia_confere %}<span class="ok">cópia idêntica à origem</span>{% endif %}</p>{% endfor %}
+  {% if i.saltos %}
+  <h3>Caminho entre servidores</h3>
+  <table>
+    <tr><th>Ordem</th><th>Enviado por</th><th>IP</th><th>Recebido por</th><th>Horário</th></tr>
+    {% set lista = i.saltos if i.saltos|length <= 2 else [i.saltos[0], i.saltos[-1]] %}
+    {% for s in lista %}
+    <tr><td>{{ 'Primeiro' if loop.first else 'Último' }}</td><td>{{ s.de or '' }}</td><td>{{ s.ip or '' }}</td><td>{{ s.por or '' }}</td><td>{{ s.horario_legivel }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="nota">{{ i.saltos|length }} salto(s) registrados no total; a lista completa está no log.</p>
+  {% endif %}
+  {% if i.anexos %}
+  <h3>Anexos</h3>
+  <table><tr><th>Nome</th><th>Tamanho</th><th>SHA-256</th></tr>
+  {% for a in i.anexos %}<tr><td>{{ a.nome_original }}</td><td>{{ a.tamanho_legivel }}</td><td class="hash">{{ a.sha256 }}</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+
+{% else %}
+  {# site, whatsapp e tela #}
+  {% if not i.evidencias and not i.navegacoes %}<p class="alerta">Item sem registros: {{ 'o navegador não abriu' if i.tipo in ('site', 'whatsapp') else 'a gravação não começou' }}. O motivo consta em Ocorrências.</p>{% endif %}
+  {% if i.tipo in ('site', 'whatsapp') %}
+    {% for n in i.navegacoes[:1] %}
+    <dl>
+      {% if n.endereco_digitado %}<dt>Endereço digitado</dt><dd>{{ n.endereco_digitado }}</dd>{% endif %}
+      <dt>Endereço final</dt><dd>{{ n.endereco_final }}</dd>
+      <dt>Título da página</dt><dd>{{ n.titulo }}</dd>
+      <dt>Acesso</dt><dd>{{ n.hora }}; resposta {{ n.codigo_resposta }}{% if n.codigo_resposta == 200 %} (página entregue normalmente){% endif %}</dd>
+      <dt>Servidor</dt><dd>IP {{ n.ip or 'não informado' }}</dd>
+      {% if n.certificado %}<dt>Certificado</dt><dd>emitido para {{ n.certificado.emitido_para }} por {{ n.certificado.emitido_por }}, válido até {{ n.certificado.valido_ate_legivel }}
+        {% if n.certificado.raiz_publica is sameas false %}<br><span class="alerta">Autoridade raiz "{{ n.certificado.autoridade_raiz }}" instalada neste computador, fora da lista pública: conexão intermediada, certificado original não conferido.</span>{% endif %}</dd>{% endif %}
+    </dl>
+    {% endfor %}
+    {% if i.navegacoes|length > 1 %}
+    <h3>Páginas acessadas</h3>
+    <table><tr><th>Hora</th><th>Endereço</th><th>IP</th><th>Resposta</th></tr>
+    {% for n in i.navegacoes %}<tr><td>{{ n.hora }}</td><td>{{ n.endereco_final }}</td><td>{{ n.ip or '' }}</td><td>{{ n.codigo_resposta }}</td></tr>{% endfor %}
+    </table>
+    {% endif %}
+  {% endif %}
+
+  {% if i.tipo == 'whatsapp' %}
+    <h3>Identificação</h3>
+    {% if i.identificacao %}
+    <ul>{% for p in i.identificacao %}<li>{{ p.rotulo }}: {% if p.pulado %}<span class="alerta">passo pulado pelo operador</span>{% else %}print às {{ p.hora }}{% endif %}</li>{% endfor %}</ul>
+    {% else %}<p class="alerta">Roteiro de identificação não realizado.</p>{% endif %}
+    <p class="nota">{{ textos.NOTA_WHATSAPP }}</p>
+    {% if i.token %}
+    <p>Token de verificação: <strong>{{ i.token.token }}</strong>, gerado às {{ i.token.hora }}
+       ({{ i.token.derivacao }}).</p>
+    <p class="nota">{{ textos.NOTA_TOKEN }}</p>
+    {% endif %}
+  {% endif %}
+
+  {% if i.tipo == 'tela' and i.gravacao %}
+    <p>Gravado: {{ i.gravacao.alvo }}, {{ i.gravacao.largura }} x {{ i.gravacao.altura }} pixels.</p>
+    <p class="nota">{{ textos.NOTA_TELA }}</p>
+  {% endif %}
+
+  {% if i.videos %}
+  <p>Gravação{% if i.tipo != 'tela' %} da janela do navegador{% endif %}: {{ i.periodo_gravado }}{% if i.pausas %}, com {{ i.pausas|length }} pausa(s){% endif %}.
+     {% if i.tempo_gravado %}Tempo gravado: {{ i.tempo_gravado }}. {% endif %}
+     {% for s in i.som[:1] %}Som: {{ s.descricao }}.{% endfor %}</p>
+  {% if i.pausas %}<p>Pausas: {% for p in i.pausas %}{{ p.inicio }} a {{ p.fim }} ({{ p.duracao }}){% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+  {% if i.trocas_som %}<p>Trocas de saída de som: {% for t in i.trocas_som %}{{ t.hora }}, de "{{ t.anterior }}" para "{{ t.nova }}"{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+  {% endif %}
+
+  {% if i.prints %}
+  <div class="miniaturas">
+    {% for p in i.prints %}
+    <figure><img src="{{ miniatura(p) }}" alt="{{ p.nome }}"><figcaption>{{ p.nome }}, {{ p.hora }}</figcaption></figure>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <table>
+    <tr><th>Arquivo</th><th>Horário</th><th>Tamanho</th><th>SHA-256</th></tr>
+    {% for e in i.evidencias %}
+    <tr><td>{% if modo == 'html' %}<a href="{{ e.arquivo }}">{{ e.nome }}</a>{% else %}{{ e.nome }}{% endif %}
+            {% if e.papel == 'download' %}<br><span class="nota">Baixado de {{ e.endereco_origem }}</span>{% endif %}</td>
+        <td>{{ e.intervalo or e.hora }}</td><td>{{ e.tamanho_legivel }}</td><td class="hash">{{ e.sha256 }}</td></tr>
+    {% endfor %}
+  </table>
+  {% if i.har %}<p>{{ i.requisicoes }} requisições a {{ i.dominios|length }} domínio(s){% if i.dominios %}: {{ i.dominios[:12]|join(', ') }}{% if i.dominios|length > 12 %} e outros{% endif %}{% endif %}.</p>{% endif %}
+{% endif %}
+</section>
+{% endfor %}
+
+{# ================================================================ ANEXO #}
+{% if incluir_anexo %}
+<section class="anexo">
+<h2>Anexo técnico</h2>
+
+<h3>Ferramenta</h3>
+<dl>
+  <dt>Versão</dt><dd>{{ r.ferramenta.versao }}{% if not r.ferramenta.oficial %} (desenvolvimento){% endif %}</dd>
+  <dt>Commit</dt><dd class="hash">{{ r.ferramenta.commit or 'não disponível' }}</dd>
+  <dt>Hash do código</dt><dd class="hash">{{ r.ferramenta.hash_codigo }}</dd>
+  {% if r.ferramenta.python %}<dt>Python {{ r.ferramenta.python.versao }}</dt><dd class="hash">{{ r.ferramenta.python.sha256 }}</dd>{% endif %}
+  {% for nome, c in r.ferramenta.componentes.items() %}<dt>{{ nome }}</dt><dd class="hash">{{ c.sha256 or 'não localizado' }}</dd>{% endfor %}
+</dl>
+<p class="nota">Metodologia versão {{ r.metodologia }}. Hash de cada arquivo do código em Verificacao/ferramenta.json.</p>
+
+<h3>Hora oficial e carimbos do tempo</h3>
+{% if r.relogio %}
+<table><tr><th>Servidor de hora</th><th>Diferença do relógio local</th></tr>
+{% for s in r.relogio.servidores %}<tr><td>{{ s.servidor }}</td><td>{% if s.erro is defined %}sem resposta{% else %}{{ s.diferenca_ms }} ms{% endif %}</td></tr>{% endfor %}
+</table>
+<p class="nota">Diferença positiva: relógio do computador atrasado; negativa: adiantado.</p>
+{% endif %}
+<table><tr><th>Momento</th><th>Autoridade</th><th>Horário do carimbo</th><th>Número de série</th></tr>
+{% for momento, c in r.carimbos.items() %}
+  {% for a in c.obtidos %}<tr><td>{{ momento|capitalize }}</td><td>{{ a.autoridade }}</td><td>{{ local(a.horario_carimbo) }}</td><td class="hash">{{ a.numero_serie }}</td></tr>{% endfor %}
+  {% for a in c.falhas %}<tr><td>{{ momento|capitalize }}</td><td>{{ a.autoridade }}</td><td colspan="2">não obtido: {{ a.motivo }}</td></tr>{% endfor %}
+{% endfor %}
+</table>
+<p class="nota">Abertura: carimbo do hash do primeiro evento do log. Fechamento: carimbo do hash do manifesto.
+{% if r.relogio and r.relogio.diferenca_ms is not none and (r.relogio.diferenca_ms|abs) > 2000 %}
+Os horários dos carimbos são os das autoridades de carimbo, que seguem a hora oficial. A diferença em relação aos horários do computador
+mostrados no restante do relatório corresponde ao desvio do relógio medido acima.{% endif %}</p>
+
+<h3>Ambiente</h3>
+{% if r.ambiente %}
+<dl>
+  <dt>Sistema</dt><dd>{{ r.ambiente.windows }}</dd>
+  <dt>Computador</dt><dd>{{ r.ambiente.computador }}{% if r.ambiente.fabricante_modelo %} ({{ r.ambiente.fabricante_modelo }}){% endif %}</dd>
+  <dt>Máquina virtual</dt><dd>{{ 'detectada' if r.ambiente.maquina_virtual else 'não detectada' }}</dd>
+  <dt>Acesso remoto</dt><dd>{{ 'detectado' if r.ambiente.acesso_remoto else 'não detectado' }}</dd>
+  <dt>Privilégio de administrador</dt><dd>{{ 'sim' if r.ambiente.administrador else 'não' }}</dd>
+  {% if r.guia and r.guia.escolha_antivirus %}<dt>Antivírus (informado pelo operador)</dt><dd>{{ r.guia.escolha_antivirus }}</dd>{% endif %}
+  <dt>Programas em execução</dt><dd>{{ r.ambiente.quantidade_processos }} (lista em Verificacao/ambiente.json)</dd>
+  {% if r.modulos_estranhos %}<dt>Bibliotecas de outros programas carregadas no navegador</dt><dd>{{ r.modulos_estranhos|join('; ') }}</dd>{% endif %}
+</dl>
+{% endif %}
+
+{% if r.testes_som %}
+<h3>Testes de som</h3>
+<table><tr><th>Hora</th><th>Saída testada</th><th>Resultado</th></tr>
+{% for t in r.testes_som %}<tr><td>{{ t.hora }}</td><td>{{ t.saida }}</td><td>{% if t.captado %}<span class="ok">tom captado</span>{% else %}<span class="alerta">tom não captado</span>{% endif %}</td></tr>{% endfor %}
+</table>
+{% endif %}
+
+{% if r.protecao %}
+<h3>Proteção contra alteração da página: cuidados adotados e motivos</h3>
+<ol>
+{% for titulo, texto, motivo in textos.PROTECAO_ANEXO %}
+  <li><strong>{{ titulo }}.</strong> {{ texto }} Motivo: {{ motivo }}
+  {% if loop.index == 1 %} Resultado nesta sessão: {% if r.protecao.deteccoes %}aberturas detectadas e fechadas às {{ r.protecao.deteccoes|join(', ') }}.{% else %}nenhuma abertura detectada.{% endif %}{% endif %}
+  </li>
+{% endfor %}
+</ol>
+<p>{{ textos.PROTECAO_SEM_BLOQUEIO }}</p>
+<p><strong>Limite.</strong> {{ textos.PROTECAO_LIMITE }}</p>
+{% endif %}
+
+<h3>Glossário</h3>
+<dl>{% for termo, definicao in textos.GLOSSARIO %}<dt>{{ termo }}</dt><dd>{{ definicao }}</dd>{% endfor %}</dl>
+</section>
+{% endif %}
+
+{% if modo == 'html' and hashes_pdf %}
+<div class="rodape">Hash do relatório em PDF:
+  {% for p in hashes_pdf %}<br>{{ p.arquivo }}: <span class="hash">{{ p.sha256 }}</span>{% endfor %}
+</div>
+{% endif %}
+</body>
+</html>
