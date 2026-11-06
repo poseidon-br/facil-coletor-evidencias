@@ -1,12 +1,7 @@
-import os
-import sys
-from pathlib import Path
+from . import diagnostico
 
-# Sem console (pythonw), os erros iriam para lugar nenhum; na fase de testes vão para um arquivo.
-if sys.stderr is None:
-    pasta = Path(os.environ.get("LOCALAPPDATA", ".")) / "ColetorEvidencias"
-    pasta.mkdir(parents=True, exist_ok=True)
-    sys.stderr = sys.stdout = open(pasta / "erros.log", "a", encoding="utf-8", buffering=1)
+# Antes da interface, para que o pywebview e as demais bibliotecas já escrevam no erros.log.
+diagnostico.iniciar()
 
 from .interface.app import main  # noqa: E402
 

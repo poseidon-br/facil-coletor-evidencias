@@ -8,12 +8,14 @@ deixe a coleta sem testemunha externa.
 from __future__ import annotations
 
 import hashlib
+import logging
 import secrets
 import urllib.request
 from pathlib import Path
 
 from asn1crypto import tsp
 
+log = logging.getLogger(__name__)
 AUTORIDADES = (
     ("FreeTSA", "https://freetsa.org/tsr"),
     ("SSL.com", "http://ts.ssl.com"),
@@ -94,6 +96,7 @@ def carimbar(dados: bytes, pasta: Path, prefixo: str, tempo_limite: float = 10.0
             })
             obtidos += 1
         except Exception as erro:
+            log.warning("carimbo do tempo não obtido de %s: %r", nome, erro)
             registro.update({"obtido": False, "motivo": str(erro) or type(erro).__name__})
         registros.append(registro)
     return registros

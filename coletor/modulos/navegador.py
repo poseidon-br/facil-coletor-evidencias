@@ -20,6 +20,7 @@ from __future__ import annotations
 import ctypes
 import ctypes.wintypes as wt
 import json
+import logging
 import os
 import queue
 import threading
@@ -36,6 +37,7 @@ from ..nucleo.sessao import Item, Sessao
 from . import certificado, token as mod_token
 from .gravador import Gravador
 
+log = logging.getLogger(__name__)
 ENDERECO_WHATSAPP = "https://web.whatsapp.com/"
 
 # Domínios de onde antivírus conhecidos injetam scripts nas páginas exibidas.
@@ -198,6 +200,7 @@ class ColetaNavegador:
                 try:
                     self._iniciar(p)
                 except Exception as erro:
+                    log.exception("navegador não abriu")
                     self.sessao.ocorrencia(f"Não foi possível abrir o navegador: {erro}", "alerta",
                                            self.item.numero, self.tipo)
                     self._fim.set()
@@ -208,6 +211,7 @@ class ColetaNavegador:
                 self._laco()
                 self._finalizar()
         except Exception as erro:
+            log.exception("falha no navegador")
             if not pronto.done():
                 pronto.set_exception(erro)
             self.sessao.ocorrencia(f"Falha no navegador: {erro}", "alerta", self.item.numero, self.tipo)
@@ -265,6 +269,7 @@ class ColetaNavegador:
             try:
                 self.gravador.iniciar()
             except Exception as erro:
+                log.exception("gravação da janela não começou")
                 self.gravador = None
                 self.sessao.ocorrencia(f"A gravação da janela não pôde começar: {erro}", "alerta",
                                        self.item.numero, self.tipo)
@@ -487,6 +492,7 @@ class ColetaNavegador:
             self.sessao.registrar_evidencia(self.item, destino, "download",
                                             {"endereco_origem": download.url, "nome_sugerido": nome})
         except Exception as erro:
+            log.exception("falha ao salvar download")
             self.sessao.ocorrencia(f"Falha ao salvar o download {nome}: {erro}", "alerta",
                                    self.item.numero, self.tipo)
 

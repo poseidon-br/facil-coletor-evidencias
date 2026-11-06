@@ -17,7 +17,7 @@ from pathlib import Path
 
 import webview
 
-from .. import NOME, NOME_COMPLETO, VERSAO, componentes
+from .. import NOME, NOME_COMPLETO, VERSAO, componentes, diagnostico
 from ..nucleo.hashing import sha256_arquivo
 from ..modulos import arquivo, eml, gravador, protecao_escrita, som
 from ..modulos.navegador import ENDERECO_WHATSAPP, PASSOS_WHATSAPP, ColetaNavegador, _area_trabalho
@@ -69,6 +69,7 @@ def _salvar_preferencias(dados: dict) -> None:
     PREFERENCIAS.write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
 
 
+@diagnostico.rastrear_chamadas(sem_registro=("listar_volumes_usb", "registrar_erro_tela"))
 class Api:
     def __init__(self):
         self._janela = None
@@ -134,6 +135,15 @@ class Api:
             _salvar_preferencias(prefs)
         return {"sucesso": resultado["sucesso"], "erro": resultado["erro"]}
 
+    def registrar_erro_tela(self, mensagem: str, origem: str = "", pilha: str = "") -> None:
+        """Erro de JavaScript na tela, levado ao erros.log."""
+        diagnostico.log.error("erro na tela: %s (%s)\n%s", mensagem, origem, pilha)
+
+    def abrir_registro_erros(self) -> None:
+        """Abre a pasta do erros.log, para o testador anexá-lo ao relatar um problema."""
+        diagnostico.PASTA.mkdir(parents=True, exist_ok=True)
+        os.startfile(diagnostico.PASTA)
+
     def concluir_guia(self, nao_mostrar: bool) -> None:
         _salvar_preferencias({**_ler_preferencias(), "guia_visto": bool(nao_mostrar)})
 
@@ -169,6 +179,7 @@ class Api:
                         "obtendo o carimbo do tempo de abertura...")
         self._sessao.preparar(componentes.todos())
         self._itens, self._som_testado, self._resultado = [], False, None
+        diagnostico.log.info("coleta aberta: %s", self._sessao.identificador)
         return {"identificador": self._sessao.identificador, "pasta": str(self._sessao.pasta),
                 "alertas": self._ocorrencias_recentes(0)}
 
@@ -447,6 +458,7 @@ class Api:
             return gerador.gerar(pasta, log, componentes.chromium())
         self._resultado = self._sessao.encerrar(gerar)
         self._resultado["identificador"] = self._sessao.identificador
+        diagnostico.log.info("coleta encerrada: %s", self._sessao.identificador)
         self._sessao = None
         return self._resultado
 

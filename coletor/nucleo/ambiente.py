@@ -10,6 +10,7 @@ from __future__ import annotations
 import ctypes
 import getpass
 import json
+import logging
 import platform
 import socket
 import subprocess
@@ -22,6 +23,7 @@ import psutil
 
 from .tempo import fuso
 
+log = logging.getLogger(__name__)
 SM_REMOTESESSION = 0x1000
 
 # Programas de acesso remoto mais comuns. Se algum estiver em execução, o
@@ -77,6 +79,7 @@ def _fabricante_modelo() -> dict:
         dados = json.loads(saida)
         return {"fabricante": dados.get("Manufacturer"), "modelo": dados.get("Model")}
     except Exception:
+        log.warning("fabricante e modelo não obtidos", exc_info=True)
         return {"fabricante": None, "modelo": None}
 
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import json
+import logging
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -18,6 +19,7 @@ from pathlib import Path
 from ..nucleo.hashing import BLOCO, sha256_arquivo
 from ..nucleo.sessao import Item, Sessao
 
+log = logging.getLogger(__name__)
 ATRIBUTOS = {
     0x1: "somente leitura", 0x2: "oculto", 0x4: "sistema", 0x20: "arquivo",
     0x100: "temporário", 0x400: "ponto de nova análise", 0x800: "compactado",
@@ -57,7 +59,7 @@ def _volume(caminho: Path) -> dict:
                               "serie_dispositivo": (disco.get("SerialNumber") or "").strip() or None,
                               "barramento": str(disco.get("BusType"))})
         except Exception:
-            pass
+            log.warning("dispositivo da unidade %s não identificado", letra, exc_info=True)
     return dados
 
 

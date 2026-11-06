@@ -89,6 +89,7 @@
   .ok { color: var(--selo); font-weight: 600; } .erro { color: var(--lacre); font-weight: 600; }
   .rodape { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--fio);
             font-size: 11.5px; color: var(--apoio); }
+  .rodape a { color: var(--tinta); }
   .creditos { margin-top: 16px; font-size: 11.5px; color: var(--apoio); }
   .creditos a { color: var(--tinta); }
   #mensagem { min-height: 18px; }
@@ -261,6 +262,16 @@
 let itemAtual = null, passos = [], passoAtual = 0, pausado = false, aposSom = null, somTestado = false;
 const $ = id => document.getElementById(id);
 
+// Erros de JavaScript da tela vão para o erros.log, junto com os do programa.
+function registrarErroTela(mensagem, origem, pilha) {
+  try { pywebview.api.registrar_erro_tela(String(mensagem), String(origem || ''), String(pilha || '')).catch(() => {}); }
+  catch (e) {}
+}
+window.addEventListener('error', ev =>
+  registrarErroTela(ev.message, (ev.filename || '') + ':' + (ev.lineno || ''), ev.error && ev.error.stack));
+window.addEventListener('unhandledrejection', ev =>
+  registrarErroTela((ev.reason && ev.reason.message) || ev.reason, 'promessa não tratada', ev.reason && ev.reason.stack));
+
 function mostrar(id) {
   document.querySelectorAll('section').forEach(s => s.classList.toggle('ativa', s.id === id));
 }
@@ -294,7 +305,9 @@ async function carregar() {
       'depois de uma coleta interrompida: novos dispositivos conectados ficam somente leitura. ' +
       '<button onclick="restaurarPendente(this)">Desativar agora</button></div>';
   }
-  $('rodape').textContent = 'Código aberto. Nenhum dado sai deste computador, exceto o hash enviado ao carimbo do tempo.';
+  $('rodape').innerHTML = 'Código aberto. Nenhum dado sai deste computador, exceto o hash enviado ao carimbo do tempo. ' +
+    'Encontrou um problema? <a href="#" onclick="abrirRegistroErros(); return false">Abrir o registro de erros</a> ' +
+    'e anexe o arquivo erros.log ao relato.';
   if (!estado.guia_visto) abrirGuia();
 }
 
@@ -319,6 +332,7 @@ async function escolherLogomarca() {
 }
 function limparLogomarca() { $('logomarca').value = ''; }
 async function abrirLink(qual) { try { await pywebview.api.abrir_link(qual); } catch (e) {} }
+async function abrirRegistroErros() { try { await pywebview.api.abrir_registro_erros(); } catch (e) {} }
 
 // ---------------------------------------------------------------- guia de uso
 let guiaPagina = 0, guiaMostrado = false, escolhaAntivirus = null, guiaNaoMostrar = false;

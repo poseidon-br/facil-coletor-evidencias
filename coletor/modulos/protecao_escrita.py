@@ -15,11 +15,13 @@ from __future__ import annotations
 import ctypes
 import ctypes.wintypes as wt
 import json
+import logging
 import subprocess
 import sys
 import winreg
 from pathlib import Path
 
+log = logging.getLogger(__name__)
 CAMINHO_CHAVE = r"SYSTEM\CurrentControlSet\Control\StorageDevicePolicies"
 VALOR = "WriteProtect"
 SEM_JANELA = 0x08000000
@@ -138,6 +140,7 @@ def volumes_usb() -> list[dict]:
         dados = json.loads(saida)
         return dados if isinstance(dados, list) else [dados]
     except Exception:
+        log.warning("unidades USB não listadas", exc_info=True)
         return []
 
 

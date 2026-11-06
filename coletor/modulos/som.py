@@ -14,6 +14,7 @@ também impede que uma falha no driver de som derrube a coleta.
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 import threading
@@ -23,6 +24,7 @@ from pathlib import Path
 import numpy as np
 import pyaudiowpatch as pa
 
+log = logging.getLogger(__name__)
 TAXA = 48000
 CANAIS = 2
 FREQUENCIA_TESTE = 1000
@@ -212,6 +214,7 @@ class CapturaSom:
             try:
                 aviso = json.loads(linha)
             except ValueError:
+                log.warning("processo de captura de som: %s", linha.decode(errors="replace").rstrip())
                 continue
             if aviso.get("evento") == "saida":
                 self.nome_saida = aviso["nome"]
@@ -241,6 +244,8 @@ def testar() -> dict:
     try:
         return json.loads(resultado.stdout.decode().strip().splitlines()[-1])
     except Exception:
+        log.warning("teste de som sem resposta (código %s): %s", resultado.returncode,
+                    resultado.stderr.decode(errors="replace")[-2000:])
         return {"saida": None, "captado": False, "nivel_db": None,
                 "erro": resultado.stderr.decode(errors="replace")[-300:]}
 

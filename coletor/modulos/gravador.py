@@ -8,6 +8,7 @@ Cada quadro leva a data e a hora do computador gravadas na imagem.
 
 from __future__ import annotations
 
+import logging
 import shutil
 import subprocess
 import threading
@@ -23,6 +24,7 @@ from ..nucleo.sessao import LIMITE_JUNTADA, Item, Sessao
 from ..nucleo.tempo import agora
 from . import som
 
+log = logging.getLogger(__name__)
 QUADROS_POR_SEGUNDO = 10
 LIMITE_SEGMENTO = int(LIMITE_JUNTADA * 0.88)  # folga para o som e o encerramento do arquivo
 BYTES_SOM_POR_SEGUNDO = 96_000 // 8
@@ -220,6 +222,7 @@ class Gravador:
                     atual.escrever_quadro(dados)
             except (BrokenPipeError, OSError):
                 erro = atual.processo.stderr.read().decode(errors="replace")[-300:]
+                log.error("ffmpeg parou de aceitar quadros: %s", erro)
                 self.sessao.ocorrencia(f"Falha no codificador de vídeo: {erro}", "alerta",
                                        self.item.numero, self.item.tipo)
                 self._parar.set()

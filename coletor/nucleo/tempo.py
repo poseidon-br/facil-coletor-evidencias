@@ -7,9 +7,11 @@ atrás), e a diferença em relação à hora oficial é medida e registrada.
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime, timezone
 
+log = logging.getLogger(__name__)
 SERVIDORES_NTP = ("a.st1.ntp.br", "b.st1.ntp.br", "c.st1.ntp.br")
 
 
@@ -85,6 +87,7 @@ def consultar_ntp(servidores=SERVIDORES_NTP, tempo_limite: float = 3.0) -> list[
                 "atraso_rede_ms": int(round(resposta.delay * 1000)),
             })
         except Exception as erro:  # rede indisponível, servidor fora do ar
+            log.warning("hora oficial não obtida de %s: %r", servidor, erro)
             resultados.append({"servidor": servidor, "erro": str(erro) or type(erro).__name__})
     return resultados
 
