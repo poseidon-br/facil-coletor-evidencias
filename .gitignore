@@ -7,3 +7,5 @@ coletas/
 COLETA_*/
 componentes/
 *.log
+# Registro de erros e preferências da execução portátil
+dados/

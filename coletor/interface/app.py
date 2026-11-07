@@ -9,6 +9,7 @@ from __future__ import annotations
 import ctypes
 import json
 import os
+import platform
 import shutil
 import subprocess
 import threading
@@ -17,7 +18,7 @@ from pathlib import Path
 
 import webview
 
-from .. import NOME, NOME_COMPLETO, VERSAO, componentes, diagnostico
+from .. import NOME, NOME_COMPLETO, VERSAO, componentes, diagnostico, portatil
 from ..nucleo.hashing import sha256_arquivo
 from ..modulos import arquivo, eml, gravador, protecao_escrita, som
 from ..modulos.navegador import ENDERECO_WHATSAPP, PASSOS_WHATSAPP, ColetaNavegador, _area_trabalho
@@ -48,7 +49,8 @@ PASTA_WEB = Path(__file__).parent / "web"
 ICONE = Path(__file__).resolve().parents[1] / "recursos" / "facil.ico"
 # Identidade própria na barra de tarefas; sem ela, o Windows agrupa a janela com o Python e usa o ícone dele.
 ID_APLICATIVO = "EliasEdenis.Facil"
-PREFERENCIAS = Path(os.environ.get("LOCALAPPDATA", ".")) / "ColetorEvidencias" / "preferencias.json"
+# Preferências na pasta "dados" da ferramenta, que a acompanha (portatil.py). Os testes apontam outro arquivo.
+PREFERENCIAS: Path | None = None
 
 
 def _pasta_documentos() -> Path:
@@ -57,16 +59,30 @@ def _pasta_documentos() -> Path:
     return Path(buffer.value or Path.home() / "Documents")
 
 
+def _arquivo_preferencias() -> Path:
+    return PREFERENCIAS or portatil.pasta_dados() / "preferencias.json"
+
+
 def _ler_preferencias() -> dict:
     try:
-        return json.loads(PREFERENCIAS.read_text(encoding="utf-8"))
+        return json.loads(_arquivo_preferencias().read_text(encoding="utf-8"))
     except Exception:
         return {}
 
 
 def _salvar_preferencias(dados: dict) -> None:
-    PREFERENCIAS.parent.mkdir(parents=True, exist_ok=True)
-    PREFERENCIAS.write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+    arquivo_prefs = _arquivo_preferencias()
+    arquivo_prefs.parent.mkdir(parents=True, exist_ok=True)
+    arquivo_prefs.write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+
+
+def _protecao_pendente(prefs: dict) -> dict | None:
+    """Pendência de bloqueio de escrita deste computador. Como as preferências viajam com a ferramenta,
+    a pendência deixada em outro computador não vale aqui (o registro do Windows é de cada máquina)."""
+    pendente = prefs.get("protecao_escrita_pendente")
+    if pendente and pendente.get("computador", platform.node()) == platform.node():
+        return pendente
+    return None
 
 
 @diagnostico.rastrear_chamadas(sem_registro=("listar_volumes_usb", "registrar_erro_tela"))
@@ -119,14 +135,13 @@ class Api:
                 "operador": prefs.get("operador", ""), "qualificacao": prefs.get("qualificacao", ""),
                 "orgao": prefs.get("orgao", ""), "logomarca": prefs.get("logomarca", ""),
                 "guia_visto": bool(prefs.get("guia_visto")),
-                "protecao_pendente": bool(prefs.get("protecao_escrita_pendente"))
-                                     and protecao_escrita.ler_valor() == 1,
+                "protecao_pendente": bool(_protecao_pendente(prefs)) and protecao_escrita.ler_valor() == 1,
                 "componentes": {k: bool(v) for k, v in componentes.todos().items()}}
 
     def restaurar_protecao_pendente(self) -> dict:
         """Desativa um bloqueio de escrita que ficou ativo depois de uma coleta interrompida."""
         prefs = _ler_preferencias()
-        pendente = prefs.get("protecao_escrita_pendente")
+        pendente = _protecao_pendente(prefs)
         if not pendente:
             return {"sucesso": True, "erro": None}
         resultado = protecao_escrita.restaurar(pendente.get("valor_anterior"))
@@ -141,8 +156,8 @@ class Api:
 
     def abrir_registro_erros(self) -> None:
         """Abre a pasta do erros.log, para o testador anexá-lo ao relatar um problema."""
-        diagnostico.PASTA.mkdir(parents=True, exist_ok=True)
-        os.startfile(diagnostico.PASTA)
+        diagnostico.pasta().mkdir(parents=True, exist_ok=True)
+        os.startfile(diagnostico.pasta())
 
     def concluir_guia(self, nao_mostrar: bool) -> None:
         _salvar_preferencias({**_ler_preferencias(), "guia_visto": bool(nao_mostrar)})
@@ -242,7 +257,8 @@ class Api:
                      "letra": None, "contexto": None}
         if resultado["sucesso"]:
             _salvar_preferencias({**_ler_preferencias(), "protecao_escrita_pendente":
-                                  {"valor_anterior": resultado["valor_anterior"]}})
+                                  {"valor_anterior": resultado["valor_anterior"],
+                                   "computador": platform.node()}})
             self._sessao.log.registrar("arquivo", "protecao_escrita_ativada", {
                 "valor_anterior": resultado["valor_anterior"], "valor_atual": resultado["valor_atual"],
                 "metodo": protecao_escrita.METODO, "conferido_por_leitura": True})

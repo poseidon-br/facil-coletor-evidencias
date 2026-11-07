@@ -127,7 +127,7 @@ registra automaticamente no relatório todo arquivo baixado durante a coleta.
 Não é preciso instalar Python nem baixar nada além do pacote: ele já traz o navegador, o ffmpeg (programa que
 monta os vídeos) e todas as bibliotecas.
 
-1. Nesta página do repositório, abra **Releases** (coluna da direita) e baixe o arquivo `Facil-0.1.0-teste.1.zip`.
+1. Nesta página do repositório, abra **Releases** (coluna da direita) e baixe o arquivo `.zip` da versão mais recente.
 2. Clique com o botão direito no arquivo baixado, escolha **Extrair tudo** e extraia para uma pasta sua, por
    exemplo Documentos. Não execute de dentro do .zip.
 3. Na pasta extraída, dê dois cliques em `Iniciar Facil.bat`.
@@ -140,9 +140,12 @@ opcional, pede essa permissão.
 
 Para conferir uma coleta, arraste a pasta `COLETA_...` sobre o arquivo `Verificar coleta.bat`.
 
+A ferramenta é portátil: o registro de erros (`erros.log`) e as preferências ficam na pasta `dados`, dentro da
+pasta da ferramenta, e vão junto quando ela é copiada para outro computador ou para um pen drive. Se essa pasta
+não aceitar gravação, eles vão para `%LOCALAPPDATA%\ColetorEvidencias`.
+
 Problemas e sugestões: abra uma *issue* (registro de defeito ou pedido) na aba **Issues** deste repositório e,
-se houver erro, anexe o arquivo `%LOCALAPPDATA%\ColetorEvidencias\erros.log`. Use apenas dados de teste, nunca
-material de caso real.
+se houver erro, anexe o arquivo `dados\erros.log`. Use apenas dados de teste, nunca material de caso real.
 
 ## Como rodar a partir do código
 

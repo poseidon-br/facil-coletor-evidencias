@@ -1,7 +1,7 @@
 """Registro de erros para depuração (erros.log), só local.
 
-O arquivo fica em %LOCALAPPDATA%\\ColetorEvidencias\\erros.log e nunca sai do
-computador: o testador o anexa, se quiser, ao relatar um problema. Não faz
+O arquivo fica na pasta "dados" da própria ferramenta (ver portatil.py) e nunca
+sai dela por conta própria: o testador o anexa, se quiser, ao relatar um problema. Não faz
 parte da coleta nem do relatório. Guarda as falhas com o rastro do código
 (traceback, a lista das funções em execução no momento do erro), os avisos,
 os erros da tela e a sequência das ações acionadas na tela, sem os valores
@@ -23,11 +23,8 @@ import threading
 import time
 from pathlib import Path
 
-from . import NOME, VERSAO
+from . import NOME, VERSAO, portatil
 
-PASTA = Path(os.environ.get("LOCALAPPDATA", ".")) / "ColetorEvidencias"
-ARQUIVO = PASTA / "erros.log"
-ANTERIOR = PASTA / "erros.anterior.log"
 LIMITE = 2 * 1024 * 1024  # acima disso, o arquivo vira erros.anterior.log na abertura seguinte
 FORMATO = "%(asctime)s.%(msecs)03d %(levelname)s [%(threadName)s] %(name)s: %(message)s"
 FORMATO_DATA = "%Y-%m-%d %H:%M:%S"
@@ -37,18 +34,28 @@ log = logging.getLogger("coletor")
 _arquivo = None
 
 
+def pasta() -> Path:
+    """Pasta do erros.log, a mesma das preferências."""
+    return portatil.pasta_dados()
+
+
+def arquivo() -> Path:
+    return pasta() / "erros.log"
+
+
 def iniciar() -> Path | None:
     """Liga o registro em arquivo e as capturas de erros não tratados. Chamar antes de importar a interface."""
     global _arquivo
     sem_console = sys.stderr is None
+    caminho, anterior = arquivo(), pasta() / "erros.anterior.log"
     try:
-        PASTA.mkdir(parents=True, exist_ok=True)
-        if ARQUIVO.is_file() and ARQUIVO.stat().st_size > LIMITE:
-            os.replace(ARQUIVO, ANTERIOR)
+        pasta().mkdir(parents=True, exist_ok=True)
+        if caminho.is_file() and caminho.stat().st_size > LIMITE:
+            os.replace(caminho, anterior)
     except OSError:
         pass
     try:
-        _arquivo = open(ARQUIVO, "a", encoding="utf-8", buffering=1)
+        _arquivo = open(caminho, "a", encoding="utf-8", buffering=1)
     except OSError:
         _arquivo = None
 
@@ -81,7 +88,29 @@ def iniciar() -> Path | None:
     threading.excepthook = _erro_em_linha
     atexit.register(lambda: log.info("%s encerrado", NOME))
     log.info("%s %s iniciado | %s", NOME, VERSAO, _ambiente())
-    return ARQUIVO if _arquivo else None
+    log.info("dados em %s (%s)", pasta(), "portátil, na pasta da ferramenta" if portatil.portatil()
+             else "perfil do usuário, porque a pasta da ferramenta não aceita gravação")
+    return caminho if _arquivo else None
+
+
+def preparar_janela() -> None:
+    """Libera as bibliotecas .NET marcadas como baixadas da internet, que impediriam a janela de abrir."""
+    liberados = portatil.liberar_bibliotecas_dotnet()
+    if liberados:
+        log.info("marca de origem da internet retirada de %d bibliotecas .NET do pacote", len(liberados))
+
+
+def avisar_falha_abertura() -> None:
+    """Janela que não abriu: avisa o usuário e oferece a pasta do erros.log, em vez de fechar em silêncio."""
+    import ctypes
+    texto = (f"O {NOME} não conseguiu abrir.\n\nO motivo ficou registrado no arquivo erros.log, na pasta:\n"
+             f"{pasta()}\n\nEnvie esse arquivo a quem lhe passou a ferramenta.\n\nAbrir a pasta agora?")
+    try:
+        # 0x4 = botões Sim e Não; 0x30 = ícone de aviso; 6 = Sim
+        if ctypes.windll.user32.MessageBoxW(None, texto, f"{NOME} {VERSAO}", 0x4 | 0x30) == 6:
+            os.startfile(pasta())
+    except Exception:
+        pass
 
 
 def _ambiente() -> str:
