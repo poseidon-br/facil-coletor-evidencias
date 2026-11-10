@@ -99,6 +99,27 @@ def montar(pasta: Path) -> dict:
         else:
             quadro.append(_linha("Alerta", f"Carimbo do tempo de {nome} não obtido"))
 
+    # Só existe o evento quando o operador escolheu o registro no OpenTimestamps.
+    opentimestamps = None
+    evento_ots = primeiro("opentimestamps")
+    if evento_ots:
+        d = evento_ots["dados"]
+        obtidos = [s for s in d["servidores"] if s.get("obtido")]
+        opentimestamps = {
+            "registrado": bool(obtidos), "hora": formatar_hora(evento_ots["local"]),
+            "horario": formatar_local(evento_ots["local"]),
+            "hash_registrado": d["hash_registrado"], "arquivo": d.get("arquivo"),
+            "sha256_arquivo": d.get("sha256_arquivo"), "obtidos": obtidos,
+            "falhas": [s for s in d["servidores"] if not s.get("obtido")],
+            "calendarios": sorted({urlsplit(c).hostname or c for s in obtidos for c in s.get("calendarios", [])}),
+        }
+        if obtidos:
+            quadro.append(_linha("Conferido", f"Hash do manifesto recebido às {opentimestamps['hora']} por "
+                                              f"{len(obtidos)} servidor(es) do OpenTimestamps, para registro "
+                                              "público na blockchain do Bitcoin"))
+        else:
+            quadro.append(_linha("Alerta", "Registro do hash do manifesto no OpenTimestamps não obtido"))
+
     relogio = primeiro("relogio_conferido")
     diferenca = relogio["dados"]["diferenca_ms"] if relogio else None
     if diferenca is None:
@@ -237,6 +258,7 @@ def montar(pasta: Path) -> dict:
         "personalizacao": dict(primeiro("personalizacao")["dados"]) if primeiro("personalizacao") else None,
         "relogio": relogio["dados"] if relogio else None,
         "carimbos": carimbos,
+        "opentimestamps": opentimestamps,
         "ambiente": amb["dados"] if amb else None,
         "modulos_estranhos": sorted({m for e in por_tipo["modulos_navegador"] for m in e["dados"].get("estranhos", [])}),
         "testes_som": [{"hora": formatar_hora(t["local"]), **t["dados"]} for t in testes_som],

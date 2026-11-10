@@ -135,6 +135,7 @@ class Api:
                 "operador": prefs.get("operador", ""), "qualificacao": prefs.get("qualificacao", ""),
                 "orgao": prefs.get("orgao", ""), "logomarca": prefs.get("logomarca", ""),
                 "guia_visto": bool(prefs.get("guia_visto")),
+                "opentimestamps": bool(prefs.get("opentimestamps", True)),
                 "protecao_pendente": bool(_protecao_pendente(prefs)) and protecao_escrita.ler_valor() == 1,
                 "componentes": {k: bool(v) for k, v in componentes.todos().items()}}
 
@@ -462,17 +463,19 @@ class Api:
 
     # ------------------------------------------------------------ fechamento
 
-    def encerrar_coleta(self) -> dict:
+    def encerrar_coleta(self, registrar_opentimestamps: bool = True) -> dict:
         self.encerrar_item()
+        _salvar_preferencias({**_ler_preferencias(), "opentimestamps": bool(registrar_opentimestamps)})
         if self._usb and self._usb.get("ativada"):
             self._progresso("Desativando o bloqueio de escrita (o Windows vai pedir confirmação)...")
             self._restaurar_protecao()
-        self._progresso("Gerando o manifesto e obtendo o carimbo do tempo de fechamento...")
+        self._progresso("Gerando o manifesto e obtendo o carimbo do tempo de fechamento"
+                        + (" e o registro no OpenTimestamps..." if registrar_opentimestamps else "..."))
 
         def gerar(pasta, log):
             self._progresso("Gerando o relatório em PDF e HTML e a declaração...")
             return gerador.gerar(pasta, log, componentes.chromium())
-        self._resultado = self._sessao.encerrar(gerar)
+        self._resultado = self._sessao.encerrar(gerar, bool(registrar_opentimestamps))
         self._resultado["identificador"] = self._sessao.identificador
         diagnostico.log.info("coleta encerrada: %s", self._sessao.identificador)
         self._sessao = None

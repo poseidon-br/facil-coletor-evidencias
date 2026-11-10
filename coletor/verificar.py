@@ -13,7 +13,7 @@ from pathlib import Path
 from .nucleo.carimbo import ler_resposta
 from .nucleo.hashing import sha256_arquivo
 from .nucleo.log import ler_eventos, verificar_cadeia
-from .nucleo import manifesto
+from .nucleo import manifesto, opentimestamps
 
 
 def verificar(pasta: Path) -> list[str]:
@@ -40,6 +40,14 @@ def verificar(pasta: Path) -> list[str]:
                 problemas.append(f"carimbo {tsr.name}: não corresponde ao hash esperado")
         except Exception as erro:
             problemas.append(f"carimbo {tsr.name}: ilegível ({erro})")
+
+    ots = verif / "manifesto.json.ots"
+    if ots.is_file():
+        try:
+            if opentimestamps.ler_arquivo(ots.read_bytes())["resumo"] != hash_manifesto:
+                problemas.append("OpenTimestamps: o comprovante não corresponde ao hash do manifesto")
+        except Exception as erro:
+            problemas.append(f"OpenTimestamps: comprovante ilegível ({erro})")
     return problemas
 
 

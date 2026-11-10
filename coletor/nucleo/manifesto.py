@@ -21,7 +21,8 @@ def fora_do_manifesto(relativo: str) -> bool:
     nome = relativo.rsplit("/", 1)[-1]
     return (
         relativo.startswith("Relatorio") or relativo == "Declaracao.docx"
-        or relativo in ("Verificacao/manifesto.json", "Verificacao/log_fechamento.jsonl")
+        or relativo in ("Verificacao/manifesto.json", "Verificacao/manifesto.json.ots",
+                        "Verificacao/log_fechamento.jsonl")
         or (relativo.startswith("Verificacao/carimbos/") and nome.startswith("fechamento"))
     )
 
@@ -93,19 +94,41 @@ fechamento da coleta.
    O campo "Message data" deve ser igual ao SHA-256 do manifesto.json.
    Os carimbos de abertura correspondem ao primeiro evento do log.
 
-3. Log encadeado
+3. Registro no OpenTimestamps (quando existir o arquivo manifesto.json.ots)
+   O OpenTimestamps é um padrão aberto e gratuito de carimbo do tempo que usa
+   a blockchain do Bitcoin (o livro de registros público dessa rede, mantido
+   em milhares de computadores independentes) como testemunha. Se o operador
+   escolheu esse registro, o hash do manifesto.json foi enviado a servidores
+   públicos de calendário no fechamento da coleta, e o comprovante está em
+   Verificacao/manifesto.json.ots. Para consultar:
+     a) abra o site https://opentimestamps.org ;
+     b) arraste o arquivo manifesto.json.ots para a área de verificação e,
+        quando o site pedir o arquivo carimbado, arraste o manifesto.json
+        (o hash é calculado no próprio navegador);
+     c) o resultado indica o bloco do Bitcoin e a data que atestam a
+        existência do manifesto. Nas primeiras horas depois da coleta, a
+        consulta informa que o registro aguarda confirmação na blockchain.
+   Peritos podem usar também o cliente oficial, que exige acesso a um nó
+   do Bitcoin:
+       ots verify manifesto.json.ots
+   O comando "ots upgrade manifesto.json.ots" acrescenta ao comprovante o
+   caminho completo até a blockchain. Como os arquivos do pacote ficam
+   somente leitura, faça isso numa cópia do .ots.
+
+4. Log encadeado
    O arquivo Verificacao/log.jsonl registra cada ação da coleta, uma por linha.
    Cada linha contém o hash da anterior; alterar, inserir ou remover qualquer
    linha quebra a cadeia. O arquivo log_fechamento.jsonl continua essa cadeia
    com os eventos posteriores ao manifesto.
 
-4. Verificação automática
+5. Verificação automática
    A própria ferramenta confere tudo isso:
        python -m coletor.verificar "caminho desta pasta"
 
 Ficam fora do manifesto, por serem gerados depois do carimbo de fechamento:
 o relatório (Relatorio.pdf e Relatorio.html), a declaração editável
-(Declaracao.docx), o log de fechamento e os carimbos de fechamento.
+(Declaracao.docx), o log de fechamento, os carimbos de fechamento e o
+comprovante do OpenTimestamps (manifesto.json.ots).
 """
 
 

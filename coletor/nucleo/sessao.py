@@ -16,7 +16,7 @@ from pathlib import Path
 
 from .. import VERSAO
 from . import ambiente as mod_ambiente
-from . import carimbo, ferramenta, manifesto, tempo
+from . import carimbo, ferramenta, manifesto, opentimestamps, tempo
 from .hashing import sha256_arquivo, sha256_bytes
 from .log import LogEncadeado, forma_canonica
 
@@ -184,8 +184,28 @@ class Sessao:
 
     # ------------------------------------------------------------------ fechamento
 
-    def encerrar(self, gerar_relatorio=None) -> dict:
-        """Fecha a sessão: manifesto, carimbo de fechamento, relatório e declaração."""
+    def _registrar_opentimestamps(self, caminho_manifesto: Path) -> dict:
+        """Registra o hash do manifesto no OpenTimestamps e guarda o comprovante ao lado dele."""
+        destino = caminho_manifesto.with_name(caminho_manifesto.name + ".ots")
+        try:
+            registro = opentimestamps.registrar(caminho_manifesto.read_bytes(), destino)
+        except Exception as erro:
+            registro = {"hash_registrado": sha256_arquivo(caminho_manifesto), "servidores": [],
+                        "obtidos": 0, "arquivo": None, "sha256_arquivo": None,
+                        "motivo": str(erro) or type(erro).__name__}
+        if registro["arquivo"]:
+            registro["arquivo"] = self.relativo(destino)
+        self.log.registrar("nucleo", "opentimestamps", registro)
+        if not registro["obtidos"]:
+            self.ocorrencia("Registro do hash do manifesto no OpenTimestamps não obtido (sem resposta dos "
+                            "servidores de calendário).", "alerta")
+        return registro
+
+    def encerrar(self, gerar_relatorio=None, registrar_opentimestamps: bool = False) -> dict:
+        """Fecha a sessão: manifesto, carimbo de fechamento, relatório e declaração.
+
+        Com `registrar_opentimestamps`, o hash do manifesto vai também ao OpenTimestamps.
+        """
         self.encerrada = True
         self.log.registrar("nucleo", "sessao_encerrada",
                            {"itens": len(self.itens), "eventos": self.log.proximo_seq + 1})
@@ -200,7 +220,10 @@ class Sessao:
         self.log.registrar("nucleo", "manifesto_gerado", {"sha256": hash_manifesto})
         self._carimbar("fechamento", caminho_manifesto.read_bytes())
 
-        resultado = {"pasta": str(self.pasta), "hash_manifesto": hash_manifesto}
+        resultado = {"pasta": str(self.pasta), "hash_manifesto": hash_manifesto, "opentimestamps": None}
+        if registrar_opentimestamps:
+            registro = self._registrar_opentimestamps(caminho_manifesto)
+            resultado["opentimestamps"] = {"obtidos": registro["obtidos"]}
         if gerar_relatorio:
             resultado.update(gerar_relatorio(self.pasta, self.log))
         self.log.registrar("nucleo", "pacote_somente_leitura", {

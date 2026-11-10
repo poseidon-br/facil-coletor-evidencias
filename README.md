@@ -31,6 +31,11 @@ registra automaticamente no relatório todo arquivo baixado durante a coleta.
   carimbos de duas autoridades diferentes, para que a falha de uma não deixe a coleta sem testemunha externa. *Resolve:* um
   registro guardado só no computador pode ser refeito por quem controla a máquina; o carimbo é emitido por
   terceiro e delimita no tempo o início e o fim da coleta. Só o hash sai do computador, nunca o conteúdo.
+- **Registro no OpenTimestamps (opcional, marcado por padrão).** No fechamento, o hash do manifesto pode ser
+  enviado também ao OpenTimestamps, padrão aberto e gratuito que inscreve hashes na blockchain do Bitcoin (o livro
+  de registros público dessa rede). O comprovante fica em `Verificacao/manifesto.json.ots`. *Resolve:* dá à coleta
+  uma data certa que não depende de nenhuma empresa nem desta ferramenta e que qualquer pessoa confere em
+  opentimestamps.org. O relatório explica o que é o registro e como consultá-lo.
 - **Hash SHA-256 de cada arquivo e manifesto.** Cada arquivo recebe sua impressão digital matemática, e a lista
   de todas elas (o manifesto) é carimbada no fechamento. *Resolve:* prova que o arquivo juntado ao processo é
   exatamente o coletado; qualquer alteração, por menor que seja, muda o hash.

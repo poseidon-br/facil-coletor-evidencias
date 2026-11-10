@@ -80,7 +80,8 @@ METODO_SINTESE = [
     ("Privacidade",
      "A ferramenta funciona sem enviar dados a ninguém. Não há conta, cadastro nem telemetria, e as "
      "evidências não passam por servidor de terceiros, o que a torna adequada também a casos "
-     "sigilosos. A única comunicação externa é o envio do hash ao carimbo do tempo, declarado acima."),
+     "sigilosos. A única comunicação externa é o envio do hash ao carimbo do tempo, declarado acima, e, quando "
+     "o operador escolhe, ao registro público do OpenTimestamps."),
     ("Limites do método",
      "O uso desta ferramenta não é exigência legal, e a coleta feita por outros meios não é inválida "
      "por isso. Este relatório declara adiante, módulo a módulo, exatamente o que atesta e o que não "
@@ -104,6 +105,47 @@ METODO_HAR = (
     "WhatsApp Web, o conteúdo das mensagens trafega cifrado de ponta a ponta e o HAR guarda apenas o "
     "conteúdo cifrado; ali, o registro visível vem da gravação contínua e dos prints."
 )
+
+# Explicação do manifesto, sempre presente na seção "Integridade do conjunto".
+MANIFESTO_EXPLICACAO = (
+    "O manifesto (arquivo Verificacao/manifesto.json) é o inventário da coleta: a lista de todos os "
+    "arquivos do pacote, cada um com o respectivo hash SHA-256, além do hash final do log. Em termos "
+    "práticos, ele funciona como o lacre do conjunto: se qualquer arquivo for alterado, trocado ou "
+    "retirado, deixa de conferir com o manifesto, e o próprio manifesto é identificado por um único "
+    "hash, informado abaixo. Por isso basta fixar no tempo esse hash para fixar a coleta inteira."
+)
+
+# Registro no OpenTimestamps, em pares (título, texto), exibidos quando o registro foi obtido.
+OPENTIMESTAMPS_SINTESE = [
+    ("O que é",
+     "O OpenTimestamps é um padrão aberto e gratuito de carimbo do tempo que usa como testemunha a "
+     "blockchain do Bitcoin, o livro de registros público dessa rede, mantido ao mesmo tempo em "
+     "milhares de computadores independentes e que não pode ser reescrito. Tecnicamente, o hash do "
+     "manifesto é enviado a servidores públicos de calendário, que reúnem os hashes recebidos num "
+     "único resumo e o inscrevem numa transação do Bitcoin; o comprovante devolvido guarda o caminho "
+     "matemático entre o hash do manifesto e essa inscrição. Em termos práticos, a existência do "
+     "manifesto desta coleta fica anotada num registro público que não pertence a nenhuma empresa ou "
+     "governo e não depende desta ferramenta nem de quem fez a coleta. Só o hash foi enviado, "
+     "combinado com um número aleatório; nenhum conteúdo saiu do computador."),
+    ("Relevância para a cadeia de custódia",
+     "A cadeia de custódia documenta a história do vestígio desde a coleta e precisa demonstrar que "
+     "ele não foi alterado. O registro contribui com a data certa: prova que o manifesto, e com ele "
+     "cada arquivo listado, já existia com exatamente aquele conteúdo no momento do registro. Essa "
+     "prova vem de fonte pública, independente do operador, da ferramenta e das autoridades de "
+     "carimbo do tempo, e pode ser conferida por qualquer pessoa, a qualquer tempo e sem custo. "
+     "Qualquer alteração posterior no pacote faz o hash deixar de conferir com o registro."),
+]
+
+OPENTIMESTAMPS_CONSULTA = [
+    "Abra o site opentimestamps.org em qualquer navegador.",
+    "Arraste para a área de verificação o arquivo Verificacao/manifesto.json.ots (o comprovante) e, "
+    "quando o site pedir o arquivo carimbado, o arquivo Verificacao/manifesto.json. O hash é "
+    "calculado no próprio navegador.",
+    "O resultado indica o bloco do Bitcoin e a data que atestam a existência do manifesto. A "
+    "inscrição na blockchain leva algumas horas: enquanto ela não se completa, a consulta informa "
+    "que o registro aguarda confirmação.",
+    "Confira que o hash SHA-256 do arquivo manifesto.json é o informado neste relatório.",
+]
 
 ATESTA_USB = (
     "Nas coletas de dispositivo USB com bloqueio de escrita, atesta também que o Windows foi "
@@ -186,6 +228,10 @@ NOTA_TOKEN = (
 NOTA_TELA = "Tudo o que apareceu no monitor foi gravado, inclusive notificações de outros programas."
 
 GLOSSARIO = [
+    ("Blockchain",
+     "livro de registros público, mantido ao mesmo tempo em milhares de computadores independentes, "
+     "em que cada bloco de registros depende do anterior, de modo que o que foi inscrito não pode "
+     "ser reescrito."),
     ("Bloqueio de escrita por registro",
      "configuração do Windows que faz o sistema recusar gravações em dispositivos USB conectados "
      "depois de ela ser ativada."),
@@ -203,7 +249,12 @@ GLOSSARIO = [
     ("Log encadeado",
      "registro de ações em que cada linha contém o hash da anterior, de modo que qualquer alteração "
      "quebra a sequência."),
-    ("Manifesto", "lista de todos os arquivos do pacote com os respectivos hashes."),
+    ("Manifesto",
+     "inventário da coleta: lista de todos os arquivos do pacote com os respectivos hashes. O hash "
+     "do manifesto identifica o conjunto inteiro."),
+    ("OpenTimestamps",
+     "padrão aberto e gratuito de carimbo do tempo que inscreve hashes na blockchain do Bitcoin, onde "
+     "qualquer pessoa pode conferi-los."),
     ("Token de verificação",
      "código derivado do primeiro registro da coleta, enviado pelo operador a si mesmo no WhatsApp "
      "para mostrar que a conta estava em uso durante a sessão."),

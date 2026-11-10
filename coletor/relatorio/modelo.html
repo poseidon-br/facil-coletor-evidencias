@@ -113,8 +113,23 @@ própria conta. {{ textos.TOKEN_SINTESE_TECNICA }} {{ textos.TOKEN_SINTESE_SIMPL
 {% endif %}
 
 <h2>Integridade do conjunto</h2>
+<p><strong>O manifesto.</strong> {{ textos.MANIFESTO_EXPLICACAO }}</p>
 <p>Hash do manifesto, que cobre os {{ r.quantidade_arquivos_manifesto }} arquivos do pacote:</p>
 <p class="hash">{{ r.hash_manifesto }}</p>
+
+{% if r.opentimestamps and r.opentimestamps.registrado %}
+{% set o = r.opentimestamps %}
+<h2>Registro no OpenTimestamps</h2>
+<p>Em {{ o.horario }}, no fechamento desta coleta, o hash do manifesto foi enviado ao OpenTimestamps e recebido por
+{{ o.obtidos|length }} servidor(es) de calendário{% if o.calendarios %} ({{ o.calendarios|join(', ') }}){% endif %},
+que devolveram o comprovante guardado no arquivo {{ o.arquivo }}.</p>
+{% for titulo, texto in textos.OPENTIMESTAMPS_SINTESE %}
+<p><strong>{{ titulo }}.</strong> {{ texto }}</p>
+{% endfor %}
+<p><strong>Como consultar o registro.</strong> A consulta é gratuita e pode ser feita por qualquer pessoa que tenha a
+pasta da coleta:</p>
+<ol>{% for passo in textos.OPENTIMESTAMPS_CONSULTA %}<li>{{ passo }}</li>{% endfor %}</ol>
+{% endif %}
 
 <h2>O que este relatório atesta e o que não atesta</h2>
 {% for nome, atesta, nao in r.atesta %}
@@ -133,7 +148,8 @@ própria conta. {{ textos.TOKEN_SINTESE_TECNICA }} {{ textos.TOKEN_SINTESE_SIMPL
 {% else %}<p>Nenhuma.</p>{% endif %}
 
 <h2>Como verificar</h2>
-<ol>{% for passo in textos.COMO_VERIFICAR %}<li>{{ passo }}</li>{% endfor %}</ol>
+<ol>{% for passo in textos.COMO_VERIFICAR %}<li>{{ passo }}</li>
+{% if loop.index == 2 and r.opentimestamps and r.opentimestamps.registrado %}<li>Consulte o registro do hash do manifesto no OpenTimestamps, pelos passos da seção Registro no OpenTimestamps.</li>{% endif %}{% endfor %}</ol>
 {% endif %}
 
 {# ================================================================ FICHAS #}
@@ -304,6 +320,26 @@ própria conta. {{ textos.TOKEN_SINTESE_TECNICA }} {{ textos.TOKEN_SINTESE_SIMPL
 {% if r.relogio and r.relogio.diferenca_ms is not none and (r.relogio.diferenca_ms|abs) > 2000 %}
 Os horários dos carimbos são os das autoridades de carimbo, que seguem a hora oficial. A diferença em relação aos horários do computador
 mostrados no restante do relatório corresponde ao desvio do relógio medido acima.{% endif %}</p>
+
+{% if r.opentimestamps %}
+{% set o = r.opentimestamps %}
+<h3>Registro no OpenTimestamps</h3>
+<table><tr><th>Servidor consultado</th><th>Resultado</th></tr>
+{% for s in o.obtidos %}<tr><td>{{ s.servidor }}</td><td>recebido às {{ o.hora }}{% if s.calendarios %}; calendário responsável: {{ s.calendarios|join(', ') }}{% endif %}</td></tr>{% endfor %}
+{% for s in o.falhas %}<tr><td>{{ s.servidor }}</td><td>não obtido: {{ s.motivo }}</td></tr>{% endfor %}
+{% if not o.obtidos and not o.falhas %}<tr><td colspan="2">não obtido</td></tr>{% endif %}
+</table>
+{% if o.registrado %}
+<dl>
+  <dt>Hash registrado (manifesto)</dt><dd class="hash">{{ o.hash_registrado }}</dd>
+  <dt>Comprovante</dt><dd>{{ o.arquivo }}</dd>
+  <dt>Hash do comprovante</dt><dd class="hash">{{ o.sha256_arquivo }}</dd>
+</dl>
+<p class="nota">O comprovante é o emitido no fechamento da coleta, com o compromisso dos calendários; a inscrição na
+blockchain do Bitcoin é concluída por eles nas horas seguintes e aparece na consulta descrita na síntese. Peritos
+podem conferir também com o cliente oficial (comando ots verify), conforme Verificacao/LEIA-ME.txt.</p>
+{% endif %}
+{% endif %}
 
 <h3>Ambiente</h3>
 {% if r.ambiente %}
