@@ -54,9 +54,9 @@
 </div>
 
 {% if not r.ferramenta.oficial %}
-<div class="dev"><strong>Versão de desenvolvimento.</strong> Este relatório foi gerado por uma versão de teste da
-ferramenta, sem build oficial assinado. Os registros e hashes são calculados normalmente, mas a versão não pode ser
-conferida com uma publicação oficial.</div>
+<div class="dev"><strong>Fora do build oficial.</strong> Este relatório foi gerado pela ferramenta executada fora do
+build oficial (a partir do código-fonte, de um pacote de teste ou com arquivos alterados). Os registros e hashes são
+calculados normalmente, mas o código em execução não foi conferido com uma versão publicada.</div>
 {% endif %}
 
 <h2>Identificação</h2>
@@ -295,13 +295,15 @@ pasta da coleta:</p>
 
 <h3>Ferramenta</h3>
 <dl>
-  <dt>Versão</dt><dd>{{ r.ferramenta.versao }}{% if not r.ferramenta.oficial %} (desenvolvimento){% endif %}</dd>
+  <dt>Versão</dt><dd>{{ r.ferramenta.versao }}{% if r.ferramenta.oficial %} (build oficial){% else %} (fora do build oficial){% endif %}</dd>
   <dt>Commit</dt><dd class="hash">{{ r.ferramenta.commit or 'não disponível' }}</dd>
   <dt>Hash do código</dt><dd class="hash">{{ r.ferramenta.hash_codigo }}</dd>
   {% if r.ferramenta.python %}<dt>Python {{ r.ferramenta.python.versao }}</dt><dd class="hash">{{ r.ferramenta.python.sha256 }}</dd>{% endif %}
   {% for nome, c in r.ferramenta.componentes.items() %}<dt>{{ nome }}</dt><dd class="hash">{{ c.sha256 or 'não localizado' }}</dd>{% endfor %}
 </dl>
-<p class="nota">Metodologia versão {{ r.metodologia }}. Hash de cada arquivo do código em Verificacao/ferramenta.json.</p>
+<p class="nota">Metodologia versão {{ r.metodologia }}. Hash de cada arquivo do código em Verificacao/ferramenta.json.
+{% if r.ferramenta.oficial %}A versão, o commit (identificador da versão exata do código) e o hash do código podem ser
+comparados com os publicados em github.com/poseidon-br/facil-coletor-evidencias/releases.{% endif %}</p>
 
 <h3>Hora oficial e carimbos do tempo</h3>
 {% if r.relogio %}

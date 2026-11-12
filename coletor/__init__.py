@@ -1,6 +1,6 @@
-"""Fácil: Coletor de Evidências Digitais Intuitivo."""
+"""Fácil: Coletor de Provas Digitais Intuitivo."""
 
-VERSAO = "0.1.0-teste.4"
+VERSAO = "1.0.0"
 NOME = "Fácil"
-SUBTITULO = "Coletor de Evidências Digitais Intuitivo"
+SUBTITULO = "Coletor de Provas Digitais Intuitivo"
 NOME_COMPLETO = f"{NOME}: {SUBTITULO}"

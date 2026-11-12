@@ -75,7 +75,7 @@ def verificar(pasta: Path) -> list[str]:
 LEIA_ME = """\
 COMO VERIFICAR ESTA COLETA
 
-Esta pasta foi gerada pelo Fácil: Coletor de Evidências Digitais Intuitivo,
+Esta pasta foi gerada pelo Fácil: Coletor de Provas Digitais Intuitivo,
 ferramenta de código aberto. Qualquer pessoa pode conferir que nada foi alterado desde o
 fechamento da coleta.
 

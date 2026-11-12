@@ -1,18 +1,36 @@
-# Fácil: Coletor de Evidências Digitais Intuitivo
+# Fácil: Coletor de Provas Digitais Intuitivo
 
-Ferramenta gratuita e de código aberto para coleta de evidências digitais no Windows 10 em diante, de autoria de
-Elias Edenis.
+Programa gratuito e de código aberto para coletar provas digitais no Windows, com os registros que a cadeia de
+custódia exige. Idealizado por Elias Edenis.
 
-**Situação:** versão 0.1.0 de teste, distribuída apenas a testadores convidados. Ainda não há build oficial
-assinado, e o relatório gerado informa isso.
+**Versão atual:** 1.0.0, para uso. O pacote é montado nos servidores do GitHub a partir do código público e sai
+com atestado de proveniência (prova criptográfica de que o arquivo veio deste repositório). Baixe em
+[Releases](https://github.com/poseidon-br/facil-coletor-evidencias/releases).
+
+## Para que serve
+
+O Fácil registra o que está na tela, na rede e nos arquivos de um modo que outra pessoa consegue conferir depois.
+O usuário principal é o advogado, não o perito: são três passos (abrir a coleta, escolher o que coletar, encerrar)
+e nenhuma decisão técnica. Ao final, a ferramenta entrega um relatório em linguagem simples e uma pasta com as
+evidências e os arquivos de verificação.
+
+Exemplos de uso prático:
+
+- **Registro de achados de OSINT** (sigla em inglês para pesquisa em fontes abertas, como sites, redes sociais e
+  cadastros públicos): cada página visitada fica registrada com print, vídeo, endereço, horário e a resposta
+  original do servidor.
+- Conversa no WhatsApp Web, com a identificação da conta e do contato pelo número de telefone.
+- Ofensa, ameaça ou anúncio fraudulento publicado em rede social ou site.
+- Página de golpe ou de venda falsa, antes que saia do ar.
+- E-mail recebido, a partir do arquivo `.eml` (o formato em que os programas de e-mail salvam a mensagem inteira).
+- Arquivos de um computador, pendrive ou disco USB, com prova de que a cópia é idêntica ao original.
+- O que acontece fora do navegador, como abrir uma pasta ou reproduzir um áudio, pela gravação da tela.
 
 ## Origem do projeto
 
-O Fácil, com a arquitetura aqui descrita, foi idealizado por Elias Edenis e codificado com *vibecoding*
-(programação em que o autor descreve em linguagem natural o comportamento desejado e uma inteligência artificial
-escreve o código), incluindo testes severos de segurança. O projeto nasceu das necessidades constatadas no dia a
-dia da investigação e dos riscos na coleta de evidências digitais identificados pelo profissional, riscos que
-outras ferramentas de coleta local não cobrem.
+O Fácil foi idealizado por Elias Edenis a partir das necessidades que percebeu no dia a dia, na experiência
+prática de investigação e no ensino de investigação de crimes cibernéticos, e dos riscos na coleta de provas
+digitais que outras ferramentas de coleta local não cobrem.
 
 O exemplo central é o DevTools (ferramentas de desenvolvedor, abertas pelo comando "inspecionar elemento"), presente
 no navegador instalado em qualquer computador. Com ele, qualquer pessoa altera textos, nomes, números e imagens
@@ -22,7 +40,24 @@ alteração. O Fácil usa um navegador próprio, em que o DevTools é fechado no
 tentativa fica registrada no relatório; guarda o arquivo HAR, que é a via original do que o servidor entregou; e
 registra automaticamente no relatório todo arquivo baixado durante a coleta.
 
-## Funções e o problema que cada uma resolve
+Antes do lançamento, a ferramenta foi testada por investigadores criminais (policiais civis), peritos e
+profissionais da advocacia.
+
+## Cadeia de custódia e proteção tecnológica da prova
+
+Cadeia de custódia é a documentação de tudo o que aconteceu com um vestígio, do momento em que foi encontrado até
+o fim do processo, para que se possa confiar que ele é o mesmo e não foi alterado. Na prova digital, isso pede
+duas garantias diferentes, e cada recurso do Fácil existe para atender a uma delas:
+
+1. **Que nada foi alterado depois da coleta.** É o papel do hash de cada arquivo, do manifesto, do log encadeado,
+   dos carimbos do tempo e do registro no OpenTimestamps: qualquer mudança posterior fica evidente, e a data da
+   coleta é atestada por terceiros.
+2. **Que nada foi fraudado durante a coleta.** É a proteção tecnológica na produção da prova: o navegador
+   próprio e isolado, a vigilância do DevTools, o registro do tráfego em HAR, a gravação contínua e o registro do
+   ambiente impedem ou denunciam a manipulação do conteúdo enquanto ele é coletado, como a edição de uma página
+   pelas ferramentas de desenvolvedor antes do print.
+
+## Recursos e o porquê de cada um
 
 ### Confiança da coleta
 
@@ -127,30 +162,133 @@ registra automaticamente no relatório todo arquivo baixado durante a coleta.
   temporariamente o antivírus e registra a escolha do usuário, sem bloquear nada. *Resolve:* antivírus
   costumam bloquear a gravação de tela e som e se colocar no meio das conexões seguras.
 
-## Como instalar a versão de teste
+## Auditabilidade
 
-Não é preciso instalar Python nem baixar nada além do pacote: ele já traz o navegador, o ffmpeg (programa que
-monta os vídeos) e todas as bibliotecas.
+O Fácil é software de código aberto publicado na internet, e isso é parte do valor da prova que ele produz:
 
-1. Nesta página do repositório, abra **Releases** (coluna da direita) e baixe o arquivo `.zip` da versão mais recente.
-2. Clique com o botão direito no arquivo baixado, escolha **Extrair tudo** e extraia para uma pasta sua, por
+- **Qualquer pessoa lê o que a ferramenta faz.** Perito, assistente técnico ou a parte contrária podem examinar o
+  código inteiro, em vez de confiar na palavra do autor ou de uma empresa.
+- **Cada relatório aponta a versão exata.** O anexo técnico traz a versão, o commit (identificador da versão exata
+  do código no histórico público) e o hash do código em execução. Quem audita sabe exatamente qual código gerou
+  aquele relatório, mesmo anos depois.
+- **O pacote não passa pelo computador do autor.** O build oficial (o pacote pronto para uso) é montado nos
+  servidores do GitHub, a partir do código público, por um roteiro também público
+  (`.github/workflows/build.yml`), e recebe um atestado de proveniência que qualquer pessoa confere.
+- **A ferramenta confere a si mesma a cada coleta.** Ela recalcula o hash do próprio código e compara com o do
+  build oficial; se algum arquivo tiver sido alterado, o relatório informa que foi gerado fora do build oficial.
+- **O histórico é permanente.** As versões publicadas e seus hashes não são apagados, para que um relatório de
+  hoje continue verificável no futuro.
+- **Toda derivação continua aberta.** A licença GPLv3 obriga quem distribuir uma versão modificada a publicar o
+  código dela.
+
+## Base legal e normativa
+
+- **Código de Processo Penal, arts. 158-A a 158-F** (incluídos pela Lei 13.964/2019). O art. 158-A define a
+  cadeia de custódia como "o conjunto de todos os procedimentos utilizados para manter e documentar a história
+  cronológica do vestígio", para rastrear sua posse e manuseio do reconhecimento ao descarte. O art. 158-B lista
+  as etapas, entre elas a coleta e o acondicionamento, este com anotação da data, da hora e do nome de quem
+  realizou a coleta. O relatório do Fácil documenta essas informações de forma automática.
+- **ISO/IEC 27037:2012**, norma internacional com diretrizes para identificação, coleta, aquisição e preservação
+  de evidência digital.
+
+A ferramenta apoia o cumprimento dessas regras, mas não decide o valor da prova: isso cabe a quem a avalia no
+processo.
+
+## Requisitos
+
+- O programa foi escrito para as versões mais atualizadas do Windows 10 (22H2) e para o Windows 11, de 64 bits.
+- Microsoft Edge WebView2 (componente que já vem no Windows 11 e nos Windows 10 atualizados).
+- Não é preciso ser administrador; só o bloqueio de escrita em USB, opcional, pede essa permissão.
+- Não é preciso instalar Python nem baixar nada além do pacote: ele já traz o navegador, o ffmpeg (programa que
+  monta os vídeos) e todas as bibliotecas.
+
+## Como baixar, conferir e instalar
+
+1. Abra [Releases](https://github.com/poseidon-br/facil-coletor-evidencias/releases) e baixe o arquivo
+   `Facil-1.0.0.zip` da versão mais recente.
+2. Opcional, recomendado para quem vai atestar o uso da ferramenta: confira o pacote baixado (abaixo).
+3. Clique com o botão direito no arquivo baixado, escolha **Extrair tudo** e extraia para uma pasta sua, por
    exemplo Documentos. Não execute de dentro do .zip.
-3. Na pasta extraída, dê dois cliques em `Iniciar Facil.bat`.
-4. Como o pacote de teste ainda não tem assinatura digital, o Windows pode mostrar "O Windows protegeu o
-   computador". Clique em **Mais informações** e depois em **Executar assim mesmo**.
+4. Na pasta extraída, dê dois cliques em `Iniciar Facil.bat`.
+5. O Windows pode mostrar "O Windows protegeu o computador", porque o pacote ainda não tem a assinatura
+   Authenticode (o certificado que o Windows reconhece em programas). Clique em **Mais informações** e depois em
+   **Executar assim mesmo**. A assinatura do pacote, por enquanto, é o atestado de proveniência.
 
-Requisitos: Windows 10 versão 1903 ou mais nova, de 64 bits, com o Microsoft Edge WebView2 (componente que já vem
-no Windows 11 e nos Windows 10 atualizados). Não é preciso ser administrador; só o bloqueio de escrita em USB,
-opcional, pede essa permissão.
+### Conferir o pacote baixado
 
-Para conferir uma coleta, arraste a pasta `COLETA_...` sobre o arquivo `Verificar coleta.bat`.
+Pelo hash, no PowerShell (o resultado deve ser igual ao SHA-256 publicado na página da versão):
 
-A ferramenta é portátil: o registro de erros (`erros.log`) e as preferências ficam na pasta `dados`, dentro da
-pasta da ferramenta, e vão junto quando ela é copiada para outro computador ou para um pen drive. Se essa pasta
-não aceitar gravação, eles vão para `%LOCALAPPDATA%\ColetorEvidencias`.
+```powershell
+Get-FileHash .\Facil-1.0.0.zip -Algorithm SHA256
+```
 
-Problemas e sugestões: abra uma *issue* (registro de defeito ou pedido) na aba **Issues** deste repositório e,
-se houver erro, anexe o arquivo `dados\erros.log`. Use apenas dados de teste, nunca material de caso real.
+Pelo atestado de proveniência, com o [GitHub CLI](https://cli.github.com) (programa de linha de comando do
+GitHub). O comando confirma que o arquivo foi montado nos servidores do GitHub, a partir deste repositório:
+
+```powershell
+gh attestation verify .\Facil-1.0.0.zip --repo poseidon-br/facil-coletor-evidencias
+```
+
+## Como conferir uma coleta
+
+- Arraste a pasta `COLETA_...` sobre o arquivo `Verificar coleta.bat`. Ele confere o log encadeado, o manifesto e
+  os carimbos do tempo, e informa qualquer arquivo alterado, ausente ou acrescentado.
+- Para o registro no OpenTimestamps, envie o arquivo `Verificacao/manifesto.json.ots` em
+  [opentimestamps.org](https://opentimestamps.org). Nas primeiras horas depois da coleta, a consulta informa que o
+  registro aguarda confirmação na blockchain.
+- O arquivo `Verificacao/LEIA-ME.txt`, dentro de cada coleta, explica a conferência passo a passo.
+
+## Perguntas frequentes
+
+**Substitui a ata notarial?** São meios diferentes. A ata tem a fé pública do tabelião, que declara o que viu. O
+Fácil produz um registro técnico que qualquer pessoa pode conferir. A escolha, ou o uso dos dois, cabe ao
+profissional responsável pelo caso.
+
+**Precisa de internet?** Para coletar sites e o WhatsApp Web, sim. A análise de e-mail e a coleta de arquivos
+funcionam sem internet, mas a coleta fica sem carimbo do tempo, e o relatório registra isso.
+
+**O que sai do meu computador?** Apenas hashes (impressões digitais matemáticas, das quais não se recupera o
+conteúdo), enviados às autoridades de carimbo do tempo e, se a opção estiver marcada, ao OpenTimestamps, além da
+consulta a servidores públicos de hora. Não há conta, cadastro nem telemetria (envio de dados de uso ao autor).
+
+**Posso usar em caso sigiloso?** Sim. O material coletado fica só na pasta escolhida por você.
+
+**Por que o antivírus reclama?** Antivírus costumam estranhar a gravação de tela e de som e se colocam no meio
+das conexões seguras. O guia de uso inicial explica o que fazer, e o relatório registra a escolha.
+
+**A ferramenta prova quem é o autor de uma publicação ou mensagem?** Não. Ela atesta que aquele conteúdo foi
+recebido naquele computador, naquele intervalo de tempo. A autoria depende de outros elementos, como dados do
+provedor ou perícia.
+
+## Relatos, sugestões e falhas de segurança
+
+Relatos de uso e sugestões de melhoria são bem-vindos, desde que restritos ao objetivo primário do software: a
+coleta de provas digitais com os registros da cadeia de custódia.
+
+- Abra uma *issue* (registro de defeito ou pedido) na aba **Issues** deste repositório. Se houver erro, anexe o
+  arquivo `dados\erros.log`. Nunca anexe material de caso real: as issues são públicas.
+- Falhas de segurança devem ser relatadas de forma reservada, pela aba **Security**, opção **Report a
+  vulnerability**.
+
+## Como citar a ferramenta
+
+Em peça ou relatório, indique o nome, a versão e o endereço. A versão e o commit constam do anexo técnico de cada
+relatório gerado.
+
+> Fácil: Coletor de Provas Digitais Intuitivo, versão 1.0.0, de Elias Edenis. Disponível em
+> https://github.com/poseidon-br/facil-coletor-evidencias.
+
+## Observações de uso
+
+- O DevTools não é bloqueado de antemão, porque a configuração que o desliga desligaria também o controle do
+  navegador pela ferramenta: se for aberto, a ferramenta o fecha na hora e registra o fato no relatório. A
+  ferramenta não altera o registro do Windows, exceto no bloqueio de escrita em USB, que é opcional e restaurado
+  ao final.
+- O antivírus pode pedir permissão para a ferramenta "usar o microfone" no primeiro teste de som: é assim que o
+  Windows trata a gravação do som que sai pelo fone ou pela caixa.
+- A ferramenta é portátil: o registro de erros (`erros.log`) e as preferências ficam na pasta `dados`, dentro da
+  pasta da ferramenta, e vão junto quando ela é copiada para outro computador ou para um pen drive. Se essa pasta
+  não aceitar gravação, eles vão para `%LOCALAPPDATA%\ColetorEvidencias`.
 
 ## Como rodar a partir do código
 
@@ -165,16 +303,10 @@ python -m venv .venv
 Depois, copie a pasta `chrome-win64` do Chromium baixado pelo Playwright
 (`%LOCALAPPDATA%\ms-playwright\chromium-*\chrome-win64`) para `componentes\chrome-win64`. O ffmpeg é procurado em
 `componentes\ffmpeg\ffmpeg.exe` e, se não estiver lá, no PATH. Para iniciar, dê dois cliques em
-`Iniciar Coletor.bat`.
+`Iniciar Coletor.bat`. Executada assim, a ferramenta informa no relatório que rodou fora do build oficial.
 
-## Observações para o teste
-
-- O DevTools não é bloqueado de antemão, porque a configuração que o desliga desligaria também o controle do
-  navegador pela ferramenta: se for aberto, a ferramenta o fecha na hora e registra o fato no relatório. A
-  ferramenta não altera o registro do Windows, exceto no bloqueio de escrita em USB, que é opcional e restaurado
-  ao final.
-- O antivírus pode pedir permissão para a ferramenta "usar o microfone" no primeiro teste de som: é assim que o
-  Windows trata a gravação do som que sai pelo fone ou pela caixa.
+O pacote publicado é montado por `empacotamento/montar.ps1`, com as versões exatas das bibliotecas listadas em
+`empacotamento/requisitos-build.txt`.
 
 ## Licença
 

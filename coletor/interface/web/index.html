@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>Fácil: Coletor de Evidências Digitais Intuitivo</title>
+<title>Fácil: Coletor de Provas Digitais Intuitivo</title>
 <style>
   /* Identidade: documento oficial brasileiro. Papel, tinta de caneta, carimbo de
      protocolo, selo verde de autenticação e lacre vermelho. Só fontes do sistema
@@ -110,8 +110,8 @@
 </svg>
 <header>
   <h1 class="marca">Fácil</h1>
-  <div class="subtitulo">Coletor de Evidências Digitais Intuitivo</div>
-  <div class="sub" id="cabecalho-sub">Versão de desenvolvimento</div>
+  <div class="subtitulo">Coletor de Provas Digitais Intuitivo</div>
+  <div class="sub" id="cabecalho-sub"></div>
 </header>
 <main>
 
@@ -308,7 +308,7 @@ let iniciado = false;
 async function carregar() {
   if (iniciado) return; iniciado = true;
   const estado = await pywebview.api.estado_inicial();
-  $('cabecalho-sub').textContent = 'Versão ' + estado.versao + ' (desenvolvimento)';
+  $('cabecalho-sub').textContent = 'Versão ' + estado.versao + (estado.oficial ? '' : ' (fora do build oficial)');
   $('operador').value = estado.operador;
   $('qualificacao').value = estado.qualificacao;
   $('pasta').value = estado.pasta;

@@ -175,7 +175,7 @@ class Gravador:
         descricao = self.descricao_som or f"saída inteira do Windows ({saida})"
         self.sessao.log.registrar(self.item.tipo, "som_origem", {
             "item": self.item.numero, "modo": "saida_inteira", "saida": saida, "descricao": descricao,
-            "motivo": "captura só do navegador ainda não implementada nesta versão de teste"
+            "motivo": "captura só do navegador ainda não implementada nesta versão"
             if self.item.tipo in ("site", "whatsapp") else None})
 
         espera = time.monotonic() + 10

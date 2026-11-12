@@ -1,0 +1,21 @@
+Fácil: Coletor de Provas Digitais Intuitivo
+Copyright (C) 2026 Elias Edenis. Licença GPLv3, texto integral no arquivo LICENSE.
+
+Este pacote inclui componentes de terceiros, cada um com a própria licença:
+
+Python {PYTHON}
+  Licença: Python Software Foundation License.
+  Texto: python\LICENSE.txt
+  Origem: https://www.python.org
+
+Bibliotecas Python (Playwright, pywebview, Pillow, NumPy, psutil, python-docx e outras)
+  Cada biblioteca traz a própria licença na pasta python\Lib\site-packages\<nome>.dist-info.
+
+Chromium (Chrome for Testing) {CHROMIUM}
+  Licença: BSD e licenças dos projetos incorporados.
+  Texto: componentes\chrome-win64\ABOUT e a página chrome://credits do próprio navegador.
+  Origem: https://www.chromium.org
+
+FFmpeg ({FFMPEG})
+  Licença: GNU GPL versão 3 (compilação "essentials" de gyan.dev).
+  Código-fonte: https://ffmpeg.org e https://www.gyan.dev/ffmpeg/builds/

@@ -1,9 +1,9 @@
 """Localização dos componentes externos (Chromium e ffmpeg).
 
-No build oficial eles são baixados na primeira execução, com hash fixado no
-manifesto do build, para a pasta "componentes". Na versão de desenvolvimento,
-a mesma pasta é preenchida manualmente, e as variáveis de ambiente
-COLETOR_CHROMIUM e COLETOR_FFMPEG permitem apontar outro local.
+No pacote publicado eles já vêm na pasta "componentes", e o hash de cada um
+entra no relatório. Na execução a partir do código-fonte, a mesma pasta é
+preenchida manualmente, e as variáveis de ambiente COLETOR_CHROMIUM e
+COLETOR_FFMPEG permitem apontar outro local.
 """
 
 from __future__ import annotations

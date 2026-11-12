@@ -24,7 +24,7 @@ def gerar(pasta: Path, dados: dict) -> Path:
     doc.add_paragraph(
         f"Eu, {dados['operador']}{qualificacao}, declaro que realizei a coleta identificada como "
         f"{dados['identificador']}{referencia}, entre {dados['inicio']} e {dados['fim']}, com o uso do "
-        f"Fácil: Coletor de Evidências Digitais Intuitivo, versão {dados['ferramenta']['versao']}.")
+        f"Fácil: Coletor de Provas Digitais Intuitivo, versão {dados['ferramenta']['versao']}.")
     doc.add_paragraph("Foram coletados os seguintes itens:")
     for item in dados["itens"]:
         doc.add_paragraph(f"{item['numero']}: {item['nome_tipo']}, {item['descricao']}", style="List Bullet")

@@ -1,7 +1,7 @@
 """Registro de erros para depuração (erros.log), só local.
 
 O arquivo fica na pasta "dados" da própria ferramenta (ver portatil.py) e nunca
-sai dela por conta própria: o testador o anexa, se quiser, ao relatar um problema. Não faz
+sai dela por conta própria: o usuário o anexa, se quiser, ao relatar um problema. Não faz
 parte da coleta nem do relatório. Guarda as falhas com o rastro do código
 (traceback, a lista das funções em execução no momento do erro), os avisos,
 os erros da tela e a sequência das ações acionadas na tela, sem os valores

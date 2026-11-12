@@ -1,0 +1,138 @@
+# Build oficial do Fácil, feito nos servidores do GitHub a partir de um commit público.
+# A cada etiqueta de versão (v1.0.0, por exemplo), monta o pacote, emite o atestado de proveniência
+# (prova criptográfica de que o arquivo saiu deste repositório, deste commit e deste roteiro) e cria a
+# página da versão como rascunho, para revisão antes da publicação.
+# Acionado à mão (workflow_dispatch), só monta o pacote e o deixa como artefato, para ensaio.
+#
+# Conferência por qualquer pessoa, com o programa de linha de comando do GitHub:
+#   gh attestation verify Facil-<versão>.zip --repo poseidon-br/facil-coletor-evidencias
+
+name: Build oficial
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSAO: "3.12.9"
+  # FFmpeg: compilação "essentials" de gyan.dev, no espelho oficial do autor no GitHub, com hash fixado.
+  FFMPEG_URL: https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip
+  FFMPEG_SHA256: 60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba
+
+jobs:
+  montar:
+    runs-on: windows-2025
+    permissions:
+      contents: write       # criar o rascunho da versão
+      id-token: write       # identidade do roteiro, usada no atestado
+      attestations: write   # gravar o atestado de proveniência
+    steps:
+      # Mesmas terminações de linha de um clone comum no Windows, para o hash do código ser reproduzível.
+      - name: Terminações de linha
+        run: git config --global core.autocrlf true
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ env.PYTHON_VERSAO }}
+          architecture: x64
+
+      - name: Versão e etiqueta
+        id: versao
+        shell: pwsh
+        run: |
+          $versao = (Select-String -Path "coletor\__init__.py" -Pattern 'VERSAO = "(.+)"').Matches[0].Groups[1].Value
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "v$versao") {
+            throw "A etiqueta ${{ github.ref_name }} não corresponde à versão $versao do código."
+          }
+          "versao=$versao" >> $env:GITHUB_OUTPUT
+
+      - name: Bibliotecas
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          .venv\Scripts\python -m pip install --no-deps -r empacotamento\requisitos-build.txt
+          .venv\Scripts\python -m pip check
+
+      - name: Chromium
+        shell: pwsh
+        run: |
+          .venv\Scripts\python -m playwright install chromium
+          $origem = Get-ChildItem "$env:LOCALAPPDATA\ms-playwright" -Directory -Filter "chromium-*" |
+            Where-Object { Test-Path (Join-Path $_.FullName "chrome-win64\chrome.exe") } | Select-Object -First 1
+          if (-not $origem) { throw "Chromium do Playwright não encontrado." }
+          New-Item -ItemType Directory -Force componentes | Out-Null
+          Copy-Item (Join-Path $origem.FullName "chrome-win64") "componentes\chrome-win64" -Recurse
+
+      - name: FFmpeg com hash conferido
+        shell: pwsh
+        run: |
+          Invoke-WebRequest $env:FFMPEG_URL -OutFile ffmpeg.zip
+          $hash = (Get-FileHash ffmpeg.zip -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne $env:FFMPEG_SHA256) { throw "Hash do FFmpeg diferente do fixado: $hash" }
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg-extraido
+          $exe = Get-ChildItem ffmpeg-extraido -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          New-Item -ItemType Directory -Force componentes\ffmpeg | Out-Null
+          Copy-Item $exe.FullName componentes\ffmpeg\ffmpeg.exe
+          Remove-Item ffmpeg.zip, ffmpeg-extraido -Recurse -Force
+
+      - name: Montar o pacote
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File empacotamento\montar.ps1 -Tipo oficial
+
+      - name: Resumo
+        id: resumo
+        shell: pwsh
+        run: |
+          $versao = "${{ steps.versao.outputs.versao }}"
+          $build = Get-Content "dist\Facil-$versao\build.json" -Raw | ConvertFrom-Json
+          $sha = (Get-Content "dist\Facil-$versao.zip.sha256").Split(" ")[0]
+          $notas = @(
+            "Fácil $versao", "",
+            "| Dado | Valor |", "|---|---|",
+            "| Versão | $versao |",
+            "| Commit | ``$($build.commit)`` |",
+            "| Hash do código | ``$($build.hash_codigo)`` |",
+            "| SHA-256 de Facil-$versao.zip | ``$sha`` |",
+            "| Python | $($build.python) |",
+            "| Chromium | $($build.chromium) |",
+            "| FFmpeg | $($build.ffmpeg) |", "",
+            "Conferência do pacote baixado: ``gh attestation verify Facil-$versao.zip --repo ${{ github.repository }}``"
+          )
+          $notas | Set-Content notas.md -Encoding utf8
+          $notas | Add-Content $env:GITHUB_STEP_SUMMARY -Encoding utf8
+
+      - name: Atestado de proveniência
+        if: github.ref_type == 'tag'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/Facil-${{ steps.versao.outputs.versao }}.zip
+
+      - name: Pacote como artefato (ensaio)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Facil-${{ steps.versao.outputs.versao }}-ensaio
+          path: |
+            dist/Facil-${{ steps.versao.outputs.versao }}.zip
+            dist/Facil-${{ steps.versao.outputs.versao }}.zip.sha256
+          compression-level: 0
+          retention-days: 7
+
+      - name: Rascunho da versão
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $versao = "${{ steps.versao.outputs.versao }}"
+          gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --draft --verify-tag `
+            --title "Fácil $versao" --notes-file notas.md `
+            "dist\Facil-$versao.zip" "dist\Facil-$versao.zip.sha256"

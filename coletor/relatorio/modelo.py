@@ -81,10 +81,11 @@ def montar(pasta: Path) -> dict:
     quadro = []
     verificacao = primeiro("ferramenta_verificada")
     if verificacao and verificacao["dados"].get("oficial"):
-        quadro.append(_linha("Conferido", f"Ferramenta oficial e íntegra, versão {verificacao['dados']['versao']}"))
+        quadro.append(_linha("Conferido", "Código da ferramenta confere com a lista de hashes do build oficial, "
+                                           f"versão {verificacao['dados']['versao']}"))
     elif verificacao:
-        quadro.append(_linha("Alerta", f"Versão {verificacao['dados']['versao']} de desenvolvimento, sem build "
-                                        "oficial assinado para conferência"))
+        quadro.append(_linha("Alerta", f"Versão {verificacao['dados']['versao']} executada fora do build oficial: "
+                                        "o código não foi conferido com uma versão publicada"))
 
     carimbos = {}
     for e in por_tipo["carimbo"]:

@@ -48,7 +48,7 @@ ATESTA = {
 # (título, texto). Escrita em duas camadas: a afirmação técnica e a explicação simples.
 METODO_SINTESE = [
     ("O que é esta ferramenta",
-     "Este relatório foi gerado pelo Fácil: Coletor de Evidências Digitais Intuitivo, programa "
+     "Este relatório foi gerado pelo Fácil: Coletor de Provas Digitais Intuitivo, programa "
      "gratuito e de código aberto para a coleta de evidências digitais no Windows. Código aberto significa que o programa "
      "inteiro é público: qualquer perito ou assistente técnico pode ler exatamente o que a ferramenta "
      "faz em cada passo e repetir a conferência. O método, portanto, é auditável."),

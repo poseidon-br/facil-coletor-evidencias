@@ -19,6 +19,7 @@ from pathlib import Path
 import webview
 
 from .. import NOME, NOME_COMPLETO, VERSAO, componentes, diagnostico, portatil
+from ..nucleo import ferramenta
 from ..nucleo.hashing import sha256_arquivo
 from ..modulos import arquivo, eml, gravador, protecao_escrita, som
 from ..modulos.navegador import ENDERECO_WHATSAPP, PASSOS_WHATSAPP, ColetaNavegador, _area_trabalho
@@ -130,7 +131,7 @@ class Api:
 
     def estado_inicial(self) -> dict:
         prefs = _ler_preferencias()
-        return {"versao": VERSAO, "nome": NOME,
+        return {"versao": VERSAO, "nome": NOME, "oficial": ferramenta.conferir_build()[0],
                 "pasta": prefs.get("pasta") or str(_pasta_documentos() / "Coletas de Evidências"),
                 "operador": prefs.get("operador", ""), "qualificacao": prefs.get("qualificacao", ""),
                 "orgao": prefs.get("orgao", ""), "logomarca": prefs.get("logomarca", ""),
@@ -156,7 +157,7 @@ class Api:
         diagnostico.log.error("erro na tela: %s (%s)\n%s", mensagem, origem, pilha)
 
     def abrir_registro_erros(self) -> None:
-        """Abre a pasta do erros.log, para o testador anexá-lo ao relatar um problema."""
+        """Abre a pasta do erros.log, para o usuário anexá-lo ao relatar um problema."""
         diagnostico.pasta().mkdir(parents=True, exist_ok=True)
         os.startfile(diagnostico.pasta())
 
